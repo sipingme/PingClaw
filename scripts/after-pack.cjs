@@ -155,6 +155,7 @@ const PLATFORM_NATIVE_SCOPES = {
   '@reflink': /^reflink-(darwin|linux|win32)-(x64|arm64|x64-gnu|x64-musl|arm64-gnu|arm64-musl|x64-msvc|arm64-msvc)/,
   '@node-llama-cpp': /^(mac|linux|win)-(arm64|x64|armv7l)(-metal|-cuda|-cuda-ext|-vulkan)?$/,
   '@esbuild': /^(darwin|linux|win32|android|freebsd|netbsd|openbsd|sunos|aix|openharmony)-(x64|arm64|arm|ia32|loong64|mips64el|ppc64|riscv64|s390x)/,
+  '@openai': /^codex-(darwin|linux|win32)-(x64|arm64)$/,
 };
 
 // Unscoped packages that follow a <name>-<platform>-<arch> convention.
@@ -171,6 +172,13 @@ const UNSCOPED_NATIVE_PACKAGES = [
 function baseArch(rawArch) {
   const dash = rawArch.indexOf('-');
   return dash > 0 ? rawArch.slice(0, dash) : rawArch;
+}
+
+function matchesTargetArch(pkgArch, targetArch) {
+  if (targetArch === 'universal') {
+    return pkgArch === 'x64' || pkgArch === 'arm64' || pkgArch === 'universal';
+  }
+  return pkgArch === targetArch || pkgArch === 'universal';
 }
 
 function cleanupNativePlatformPackages(nodeModulesDir, platform, arch) {
@@ -190,7 +198,7 @@ function cleanupNativePlatformPackages(nodeModulesDir, platform, arch) {
 
       const isMatch =
         pkgPlatform === platform &&
-        (pkgArch === arch || pkgArch === 'universal');
+        matchesTargetArch(pkgArch, arch);
 
       if (!isMatch) {
         try {
@@ -215,7 +223,7 @@ function cleanupNativePlatformPackages(nodeModulesDir, platform, arch) {
 
       const isMatch =
         pkgPlatform === platform &&
-        (pkgArch === arch || pkgArch === 'universal');
+        matchesTargetArch(pkgArch, arch);
 
       if (!isMatch) {
         try {
@@ -228,6 +236,75 @@ function cleanupNativePlatformPackages(nodeModulesDir, platform, arch) {
 
   return removed;
 }
+
+function cleanupNodeModulesRuntimeJunk(nodeModulesDir, platform, arch) {
+  let removed = 0;
+
+  const nodeWavDir = join(nodeModulesDir, 'node-wav');
+  for (const name of ['x.json', 'x.js', 'x.js~', 'file.wav']) {
+    try {
+      const target = join(nodeWavDir, name);
+      if (existsSync(target)) {
+        rmSync(target, { recursive: true, force: true });
+        removed++;
+      }
+    } catch { /* */ }
+  }
+
+  const treeSitterBashDir = join(nodeModulesDir, 'tree-sitter-bash');
+  const treeSitterSrc = join(treeSitterBashDir, 'src');
+  for (const name of ['parser.c', 'scanner.c', 'grammar.json', 'tree_sitter']) {
+    try {
+      const target = join(treeSitterSrc, name);
+      if (existsSync(target)) {
+        rmSync(target, { recursive: true, force: true });
+        removed++;
+      }
+    } catch { /* */ }
+  }
+
+  const prebuildsDir = join(treeSitterBashDir, 'prebuilds');
+  if (existsSync(prebuildsDir)) {
+    for (const entry of readdirSync(prebuildsDir)) {
+      const [entryPlatform, ...entryArchParts] = entry.split('-');
+      const entryArch = baseArch(entryArchParts.join('-'));
+      if (entryPlatform === platform && matchesTargetArch(entryArch, arch)) continue;
+      try {
+        rmSync(join(prebuildsDir, entry), { recursive: true, force: true });
+        removed++;
+      } catch { /* */ }
+    }
+  }
+
+  return removed;
+}
+
+function cleanupKnownRuntimeJunk(rootDir, platform, arch) {
+  let removed = 0;
+  const stack = [rootDir];
+
+  while (stack.length > 0) {
+    const dir = stack.pop();
+    let entries;
+    try { entries = readdirSync(normWin(dir), { withFileTypes: true }); } catch { continue; }
+
+    if (basename(dir) === 'node_modules') {
+      removed += cleanupNodeModulesRuntimeJunk(dir, platform, arch);
+    }
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      stack.push(join(dir, entry.name));
+    }
+  }
+
+  return removed;
+}
+
+exports.__test = {
+  cleanupNativePlatformPackages,
+  cleanupNodeModulesRuntimeJunk,
+};
 
 // ── Broken module patcher ─────────────────────────────────────────────────────
 // Some bundled packages have transpiled CJS that sets `module.exports = exports.default`
@@ -621,6 +698,10 @@ exports.default = async function afterPack(context) {
       const pluginNM = join(pluginDestDir, 'node_modules');
       cleanupUnnecessaryFiles(pluginDestDir);
       if (existsSync(pluginNM)) {
+        const pluginJunkRemoved = cleanupKnownRuntimeJunk(pluginDestDir, platform, arch);
+        if (pluginJunkRemoved > 0) {
+          console.log(`[after-pack] ✅ ${pluginId}: removed ${pluginJunkRemoved} known runtime junk files/directories.`);
+        }
         cleanupKoffi(pluginNM, platform, arch);
         cleanupNativePlatformPackages(pluginNM, platform, arch);
       }
@@ -761,7 +842,8 @@ exports.default = async function afterPack(context) {
   // 2. General cleanup on the full openclaw directory (not just node_modules)
   console.log('[after-pack] 🧹 Cleaning up unnecessary files ...');
   const removedRoot = cleanupUnnecessaryFiles(openclawRoot);
-  console.log(`[after-pack] ✅ Removed ${removedRoot} unnecessary files/directories.`);
+  const removedKnownJunk = cleanupKnownRuntimeJunk(openclawRoot, platform, arch);
+  console.log(`[after-pack] ✅ Removed ${removedRoot + removedKnownJunk} unnecessary files/directories.`);
 
   // 3. Platform-specific: strip koffi non-target platform binaries
   const koffiRemoved = cleanupKoffi(dest, platform, arch);

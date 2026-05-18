@@ -177,6 +177,10 @@ echo`   Virtual store root: ${openclawVirtualNM}`;
 queue.push({ nodeModulesDir: openclawVirtualNM, skipPkg: 'openclaw' });
 
 const SKIP_PACKAGES = new Set([
+  // Extra bundled extensions such as @openclaw/codex can declare openclaw as a
+  // peer/optional dependency. The bundle already copies openclaw to OUTPUT root,
+  // so do not also copy a duplicate into OUTPUT/node_modules/openclaw.
+  'openclaw',
   'typescript',
   '@playwright/test',
   // @discordjs/opus is a native .node addon compiled for the system Node.js
@@ -447,6 +451,25 @@ function patchBundledExtensionPackageJsons(extensionsRoot) {
 
 patchBundledExtensionPackageJsons(extensionsDir);
 
+function bundleExternalExtension(pkgName, extensionId) {
+  const pkgLink = path.join(NODE_MODULES, ...pkgName.split('/'));
+  if (!fs.existsSync(pkgLink)) {
+    throw new Error(`Missing extension package "${pkgName}". Run pnpm install first.`);
+  }
+
+  const realPath = fs.realpathSync(pkgLink);
+  const dest = path.join(extensionsDir, extensionId);
+  fs.rmSync(normWin(dest), { recursive: true, force: true });
+  fs.mkdirSync(normWin(path.dirname(dest)), { recursive: true });
+  fs.cpSync(normWin(realPath), normWin(dest), {
+    recursive: true,
+    dereference: true,
+  });
+  echo`   Bundled external extension ${pkgName} -> dist/extensions/${extensionId}`;
+}
+
+bundleExternalExtension('@openclaw/codex', 'codex');
+
 // 6. Clean up the bundle to reduce package size
 //
 // This removes platform-agnostic waste: dev artifacts, docs, source maps,
@@ -480,6 +503,47 @@ function rmSafe(target) {
     else fs.rmSync(target, { force: true });
     return true;
   } catch { return false; }
+}
+
+function cleanupNodeModulesRuntimeJunk(nodeModulesDir) {
+  let removedCount = 0;
+
+  const nodeWavDir = path.join(nodeModulesDir, 'node-wav');
+  for (const name of ['x.json', 'x.js', 'x.js~', 'file.wav']) {
+    if (rmSafe(path.join(nodeWavDir, name))) removedCount++;
+  }
+
+  // tree-sitter-bash ships C sources for rebuilding its native addon. Packaged
+  // builds use the prebuilt addon/wasm; keep node-types.json because the CJS
+  // entry exposes it as optional runtime metadata.
+  const treeSitterSrc = path.join(nodeModulesDir, 'tree-sitter-bash', 'src');
+  for (const name of ['parser.c', 'scanner.c', 'grammar.json', 'tree_sitter']) {
+    if (rmSafe(path.join(treeSitterSrc, name))) removedCount++;
+  }
+
+  return removedCount;
+}
+
+function cleanupKnownRuntimeJunk(rootDir) {
+  let removedCount = 0;
+  const stack = [rootDir];
+
+  while (stack.length > 0) {
+    const dir = stack.pop();
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { continue; }
+
+    if (path.basename(dir) === 'node_modules') {
+      removedCount += cleanupNodeModulesRuntimeJunk(dir);
+    }
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      stack.push(path.join(dir, entry.name));
+    }
+  }
+
+  return removedCount;
 }
 
 function cleanupBundle(outputDir) {
@@ -619,6 +683,8 @@ function cleanupBundle(outputDir) {
   for (const rel of LARGE_REMOVALS) {
     if (rmSafe(path.join(outputDir, rel))) removedCount++;
   }
+
+  removedCount += cleanupKnownRuntimeJunk(outputDir);
 
   return removedCount;
 }

@@ -465,7 +465,7 @@ describe('sanitizeOpenClawConfig', () => {
     expect(telegram.botToken).toBe('telegram-token');
   });
 
-  it('normalizes legacy feishu plugin state to a single external plugin and disables built-in feishu', async () => {
+  it('normalizes legacy feishu plugin state to a single external plugin and removes built-in feishu', async () => {
     await writeOpenClawJson({
       channels: {
         feishu: {
@@ -507,7 +507,7 @@ describe('sanitizeOpenClawConfig', () => {
       enabled: true,
       config: { preserved: true },
     });
-    expect(entries.feishu).toEqual({ enabled: false });
+    expect(entries.feishu).toBeUndefined();
   });
 
   it('removes residual feishu plugin registrations when feishu channel is not configured', async () => {
@@ -738,6 +738,7 @@ describe('sanitizeOpenClawConfig', () => {
       { dir: 'groq', id: 'groq', enabledByDefault: true },
       { dir: 'alibaba', id: 'alibaba', enabledByDefault: true },
       { dir: 'memory-core', id: 'memory-core' },
+      { dir: 'codex', id: 'codex', providers: ['codex'] },
       { dir: 'openrouter', id: 'openrouter', enabledByDefault: true, providers: ['openrouter'] },
       { dir: 'anthropic', id: 'anthropic', enabledByDefault: true, providers: ['anthropic'] },
     ]) {
@@ -780,6 +781,7 @@ describe('sanitizeOpenClawConfig', () => {
     expect(allow).toContain('custom-plugin');
     expect(allow).toContain('browser');
     expect(allow).toContain('memory-core');
+    expect(allow).toContain('codex');
     expect(allow).toContain('alibaba');
     expect(allow).not.toContain('groq');
     expect(allow).toContain('openrouter');
