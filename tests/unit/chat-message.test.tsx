@@ -102,6 +102,60 @@ describe('ChatMessage attachment dedupe', () => {
     expect(screen.getByAltText('desktop_screenshot.jpg')).toBeInTheDocument();
   });
 
+  it('keeps html artifacts visible when process attachments are suppressed', async () => {
+    const message: RawMessage = {
+      role: 'assistant',
+      content: '已生成 /workspace/demo.html',
+    };
+
+    render(<ChatMessage message={message} suppressProcessAttachments />);
+
+    expect(await screen.findByText('demo.html')).toBeInTheDocument();
+  });
+
+  it('hides generic tool-result markdown attachments when process attachments are suppressed', () => {
+    const message: RawMessage = {
+      role: 'assistant',
+      content: 'Coder has finished the analysis, here are the conclusions.',
+      _attachedFiles: [
+        {
+          fileName: 'CHECKLIST.md',
+          mimeType: 'text/markdown',
+          fileSize: 433,
+          preview: null,
+          filePath: '/Users/bytedance/.openclaw/workspace/CHECKLIST.md',
+          source: 'tool-result',
+        },
+      ],
+    };
+
+    render(<ChatMessage message={message} suppressProcessAttachments />);
+
+    expect(screen.getByText('Coder has finished the analysis, here are the conclusions.')).toBeInTheDocument();
+    expect(screen.queryByText('CHECKLIST.md')).not.toBeInTheDocument();
+  });
+
+  it('keeps attached SKILL.md visible when process attachments are suppressed', () => {
+    const message: RawMessage = {
+      role: 'assistant',
+      content: '这是文件。',
+      _attachedFiles: [
+        {
+          fileName: 'SKILL.md',
+          mimeType: 'text/markdown',
+          fileSize: 128,
+          preview: null,
+          filePath: '/workspace/skills/open-xueqiu/SKILL.md',
+          source: 'tool-result',
+        },
+      ],
+    };
+
+    render(<ChatMessage message={message} suppressProcessAttachments />);
+
+    expect(screen.getByText('SKILL.md')).toBeInTheDocument();
+  });
+
   it('keeps pdf and spreadsheet artifacts visible when process attachments are suppressed', () => {
     const message: RawMessage = {
       role: 'assistant',

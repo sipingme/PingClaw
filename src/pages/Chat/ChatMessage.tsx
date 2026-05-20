@@ -1,11 +1,12 @@
 /**
  * Chat Message Component
  * Renders user / assistant / system / toolresult messages
- * with markdown, images, and tool cards. Thinking output is
+ * with markdown and images. Tool steps render in ExecutionGraphCard;
+ * streaming runs may show a compact ToolStatusBar. Thinking output is
  * surfaced via ExecutionGraphCard, not inside message bubbles.
  */
 import { useState, useCallback, useEffect, memo } from 'react';
-import { Sparkles, Copy, Check, ChevronDown, ChevronRight, Wrench, FileText, Film, Music, FileArchive, File, X, FolderOpen, ZoomIn, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Sparkles, Copy, Check, Wrench, FileText, Film, Music, FileArchive, File, X, FolderOpen, ZoomIn, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -70,7 +71,36 @@ function isDirectoryAttachment(file: AttachedFileMeta): boolean {
 
 function isSkillFileAttachment(file: AttachedFileMeta): boolean {
   const path = file.filePath ?? '';
-  return /(?:^|[\\/])\.openclaw[\\/]skills[\\/][^\\/]+[\\/].+\.[A-Za-z0-9]+$/i.test(path);
+  return (
+    /(?:^|[\\/])\.openclaw[\\/]skills[\\/][^\\/]+[\\/].+\.[A-Za-z0-9]+$/i.test(path)
+    || /(?:^|[\\/])skills[\\/][^\\/]+[\\/]SKILL\.md$/i.test(path)
+  );
+}
+
+function isHtmlOrMarkdownPreview(file: AttachedFileMeta): boolean {
+  const name = file.fileName.toLowerCase();
+  const mime = file.mimeType.toLowerCase();
+  return (
+    mime === 'text/html'
+    || mime === 'text/markdown'
+    || name.endsWith('.html')
+    || name.endsWith('.htm')
+    || name.endsWith('.md')
+    || name.endsWith('.markdown')
+  );
+}
+
+/** User-facing artifacts that must stay visible when process output is folded into the graph. */
+function isUserFacingAttachmentWhenFolded(file: AttachedFileMeta): boolean {
+  if (file.mimeType.startsWith('image/')) return true;
+  if (isDirectoryAttachment(file)) return true;
+  if (isSkillFileAttachment(file)) return true;
+  if (isChatPreviewDocument(file)) return true;
+  // Paths parsed from the assistant reply (e.g. "/workspace/demo.html") are
+  // intentional user-facing links. Generic tool-result markdown attachments
+  // (e.g. CHECKLIST.md emitted mid-run) stay folded into the execution graph.
+  if (file.source === 'message-ref' && isHtmlOrMarkdownPreview(file)) return true;
+  return false;
 }
 
 function validationKindForAttachment(file: AttachedFileMeta): 'file' | 'dir' | null {
@@ -276,13 +306,12 @@ export const ChatMessage = memo(function ChatMessage({
   });
   const filteredProcessAttachments = derivedAttachedFiles.filter((file) => {
     if (file.source !== 'tool-result' && file.source !== 'message-ref') return true;
-    // Runtime-produced user-facing artifacts (images, PDFs, spreadsheets,
+    // Runtime-produced user-facing artifacts (images, HTML/Markdown/PDF/XLSX,
     // skill directories, ...) must remain visible in the reply bubble even
     // when generic process attachments are folded into the execution graph.
     // The graph card itself does not render `_attachedFiles`, so dropping
-    // images here would leave the user with no way to see them at all.
-    if (file.mimeType.startsWith('image/')) return true;
-    return isChatPreviewDocument(file) || isDirectoryAttachment(file) || isSkillFileAttachment(file);
+    // them here would leave the user with no way to open previews from chat.
+    return isUserFacingAttachmentWhenFolded(file);
   });
   // When a message is attachment-only, keep those attachments visible even if
   // process attachments are generally suppressed for this run segment —
@@ -326,15 +355,6 @@ export const ChatMessage = memo(function ChatMessage({
       >
         {isStreaming && !isUser && streamingTools.length > 0 && (
           <ToolStatusBar tools={streamingTools} />
-        )}
-
-        {/* Tool use cards */}
-        {visibleTools.length > 0 && (
-          <div className="space-y-1">
-            {visibleTools.map((tool, i) => (
-              <ToolCard key={tool.id || i} name={tool.name} input={tool.input} />
-            ))}
-          </div>
         )}
 
         {/* Images — rendered ABOVE text bubble for user messages */}
@@ -809,27 +829,3 @@ function ImageLightbox({
   );
 }
 
-// ── Tool Card ───────────────────────────────────────────────────
-
-function ToolCard({ name, input }: { name: string; input: unknown }) {
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div className="rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-sm">
-      <button
-        className="flex items-center gap-2 w-full px-3 py-1.5 text-muted-foreground hover:text-foreground transition-colors"
-        onClick={() => setExpanded(!expanded)}
-      >
-        <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />
-        <Wrench className="h-3 w-3 shrink-0 opacity-60" />
-        <span className="font-mono text-xs">{name}</span>
-        {expanded ? <ChevronDown className="h-3 w-3 ml-auto" /> : <ChevronRight className="h-3 w-3 ml-auto" />}
-      </button>
-      {expanded && input != null && (
-        <pre className="px-3 pb-2 text-xs text-muted-foreground overflow-x-auto">
-          {typeof input === 'string' ? input : JSON.stringify(input, null, 2) as string}
-        </pre>
-      )}
-    </div>
-  );
-}
