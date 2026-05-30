@@ -3,8 +3,8 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { useUpdateStore } from '@/stores/update';
 
-const AVAILABLE_TOAST_ID = 'clawx-update-available';
-const DOWNLOADED_TOAST_ID = 'clawx-update-downloaded';
+const AVAILABLE_TOAST_ID = 'pingclaw-update-available';
+const DOWNLOADED_TOAST_ID = 'pingclaw-update-downloaded';
 
 /**
  * Shows global update prompts outside the Settings page.

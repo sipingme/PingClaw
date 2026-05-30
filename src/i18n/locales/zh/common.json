@@ -44,6 +44,14 @@
         "hide": "隐藏",
         "clear": "清空"
     },
+    "window": {
+        "minimize": "最小化",
+        "maximize": "最大化",
+        "restore": "还原",
+        "close": "关闭",
+        "resizeSidebar": "拖动以调整侧边栏宽度",
+        "resizePanel": "拖动以调整面板宽度"
+    },
     "status": {
         "running": "运行中",
         "stopped": "已停止",

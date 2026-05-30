@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { cn } from '@/lib/utils';
+import { HOVER_ROW } from '@/lib/ui-patterns';
 import {
   EMPTY_SKILL_GROUPS,
   isSkillFileGroupsEmpty,
@@ -77,7 +78,7 @@ export function SkillFileSections({ baseDir, onOpen, className }: SkillFileSecti
 
   if (isSkillFileGroupsEmpty(groups)) {
     return (
-      <div className={cn('rounded-xl border border-black/10 bg-black/5 px-4 py-3 text-xs text-muted-foreground dark:border-white/10 dark:bg-white/5', className)}>
+      <div className={cn('rounded-xl border border-border/60 bg-card/40 px-4 py-3 text-xs text-muted-foreground', className)}>
         {t('detail.sections.empty', { defaultValue: 'This skill does not contain any previewable files.' })}
       </div>
     );
@@ -139,8 +140,8 @@ function SkillFileSection({ title, description, files, onOpen }: SkillFileSectio
             onClick={() => onOpen(file)}
             className={cn(
               'flex items-center gap-2 rounded-xl border border-black/5 bg-transparent px-3 py-2 text-left transition-colors',
-              'hover:border-primary/40 hover:bg-primary/5',
-              'dark:border-white/5 dark:hover:bg-white/10',
+              HOVER_ROW,
+              'hover:border-border/70 dark:border-white/5',
             )}
             title={file.filePath}
           >

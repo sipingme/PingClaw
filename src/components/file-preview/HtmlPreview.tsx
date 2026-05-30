@@ -5,7 +5,7 @@
  * iframe with a sandbox instead of being injected into the React tree.
  * We allow scripts so simple interactive demo pages still work, but do
  * not grant same-origin/top-navigation/popups; the iframe therefore gets
- * an opaque origin and cannot reach back into the ClawX renderer.
+ * an opaque origin and cannot reach back into the PingClaw renderer.
  */
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -59,7 +59,7 @@ export default function HtmlPreview({ source, filePath, fileName, className }: H
     <div className={cn('h-full min-h-0 bg-white', className)}>
       <iframe
         data-testid="html-preview-frame"
-        title={fileName ?? t('filePreview.html.title', 'HTML preview')}
+        title={fileName ?? t('filePreview.html.title')}
         srcDoc={srcDoc}
         sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation allow-downloads"
         className="h-full w-full border-0 bg-white"

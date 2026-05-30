@@ -11,11 +11,11 @@ test.describe('Windows frameless chrome', () => {
     await expect(page.getByTestId('main-layout')).toHaveAttribute('data-platform', 'win32');
 
     const shell = page.getByTestId('main-layout');
-    await expect(shell).toHaveClass(/bg-surface-sidebar/);
+    await expect(shell).toHaveClass(/bg-background/);
 
     const titleBar = page.getByTestId('windows-titlebar');
     await expect(titleBar).toBeVisible();
-    await expect(titleBar).toHaveClass(/bg-surface-sidebar/);
+    await expect(titleBar).toHaveClass(/bg-background/);
     await expect(titleBar).toHaveCSS('-webkit-app-region', 'drag');
 
     const main = page.getByTestId('main-content');

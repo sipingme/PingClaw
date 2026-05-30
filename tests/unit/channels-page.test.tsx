@@ -492,7 +492,7 @@ describe('Channels page status refresh', () => {
             consecutiveHeartbeatMisses: 1,
           },
           channels: [],
-          clawxLogTail: 'clawx',
+          pingclawLogTail: 'pingclaw',
           gatewayLogTail: 'gateway',
           gatewayErrLogTail: '',
         };
@@ -716,7 +716,7 @@ describe('Channels page status refresh', () => {
             consecutiveHeartbeatMisses: 1,
           },
           channels: [],
-          clawxLogTail: `clawx-${diagnosticsFetchCount}`,
+          pingclawLogTail: `pingclaw-${diagnosticsFetchCount}`,
           gatewayLogTail: 'gateway',
           gatewayErrLogTail: '',
         };

@@ -18,7 +18,18 @@ import { handleSessionRoutes } from './routes/sessions';
 import { handleCronRoutes } from './routes/cron';
 import { handleDiagnosticsRoutes } from './routes/diagnostics';
 import { handleMediaRoutes } from './routes/media';
-import { sendJson, setCorsHeaders, requireJsonContentType } from './route-utils';
+import { sendJson, setCorsHeaders, requireJsonContentType, isWebDevModeEnabled } from './route-utils';
+
+function isLocalhostRequest(req: IncomingMessage): boolean {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string' && forwarded.trim()) {
+    return false;
+  }
+  const address = req.socket.remoteAddress;
+  return address === '127.0.0.1'
+    || address === '::1'
+    || address === '::ffff:127.0.0.1';
+}
 
 type RouteHandler = (
   req: IncomingMessage,
@@ -80,6 +91,24 @@ export function startHostApiServer(ctx: HostApiContext, port = getPort('CLAWX_HO
       if (req.method === 'OPTIONS') {
         res.statusCode = 204;
         res.end();
+        return;
+      }
+
+      // Web dev bootstrap: expose the session token to the Vite dev server.
+      if (
+        isWebDevModeEnabled()
+        && requestUrl.pathname === '/api/dev/session'
+        && req.method === 'GET'
+      ) {
+        if (!isLocalhostRequest(req)) {
+          sendJson(res, 403, { success: false, error: 'Forbidden' });
+          return;
+        }
+        sendJson(res, 200, {
+          success: true,
+          token: hostApiToken,
+          hostApiBase: `http://127.0.0.1:${port}`,
+        });
         return;
       }
 

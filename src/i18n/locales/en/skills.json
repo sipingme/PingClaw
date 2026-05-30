@@ -120,6 +120,7 @@
         "searching": "Searching ClawHub...",
         "noResults": "No skills found matching your search.",
         "emptyPrompt": "Search for new skills to expand your capabilities.",
+        "install": "Install",
         "searchError": "ClawHub search failed. Check your connection or installation."
     }
 }

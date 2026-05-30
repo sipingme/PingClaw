@@ -5,7 +5,7 @@
     "gatewayNotRunning": "Gateway Not Running",
     "gatewayRequired": "The OpenClaw Gateway needs to be running to use chat. It will start automatically, or you can start it from Settings.",
     "welcome": {
-        "title": "ClawX Chat",
+        "title": "PingClaw Chat",
         "subtitle": "What can I do for you?",
         "askQuestions": "Handle Tasks",
         "askQuestionsDesc": "Work on task-oriented requests",
@@ -15,6 +15,8 @@
     },
     "noLogs": "(No logs available yet)",
     "scrollToLatest": "Jump to latest",
+    "loadMoreHistory": "Load earlier messages",
+    "loadingMoreHistory": "Loading...",
     "toolbar": {
         "refresh": "Refresh chat",
         "currentAgent": "Talking to {{agent}}",
@@ -76,7 +78,7 @@
         "errors": {
             "outsideSandbox": "Path outside sandbox — access denied",
             "outsideSandboxTitle": "Could not read this file",
-            "outsideSandboxHint": "ClawX could not read this path. The file may have been moved or deleted, or the current account may not have permission. You can still reveal it in the file manager.",
+            "outsideSandboxHint": "PingClaw could not read this path. The file may have been moved or deleted, or the current account may not have permission. You can still reveal it in the file manager.",
             "readOnlyRoot": "File lives in a read-only location (e.g. bundled skill) and cannot be modified",
             "tooLarge": "File too large ({{size}}); preview disabled",
             "binary": "Binary file — text preview unavailable",
@@ -86,7 +88,7 @@
             "unsupportedFormatTitle": "This file format is not supported for built-in preview or diff",
             "unsupportedFormatHint": "Built-in preview and diff currently support directly readable text/Markdown-style files only. Open the file in the file manager instead.",
             "largeBinaryOpenTitle": "This file is too large for built-in preview",
-            "largeBinaryOpenHint": "This file is {{size}}. ClawX cannot preview it inline, but you can confirm and open it with the system default app.",
+            "largeBinaryOpenHint": "This file is {{size}}. PingClaw cannot preview it inline, but you can confirm and open it with the system default app.",
             "openInFinderFailed": "Could not reveal file",
             "openFailed": "Open failed: {{error}}"
         },
@@ -104,7 +106,14 @@
             "size": "File size: {{size}}",
             "cancel": "Cancel"
         },
+        "html": {
+            "title": "HTML preview"
+        },
+        "image": {
+            "loadFailed": "Image failed to load: {{error}}"
+        },
         "pdf": {
+            "title": "PDF preview",
             "loadFailed": "Failed to load PDF: {{error}}",
             "prev": "Previous page",
             "next": "Next page",
@@ -142,7 +151,7 @@
         "eyebrow": "Run View",
         "title": "Task Outline",
         "emptyTitle": "No structured steps yet",
-        "emptyBody": "Once a run starts, ClawX will surface thinking, tool calls, and handoff states here.",
+        "emptyBody": "Once a run starts, PingClaw will surface thinking, tool calls, and handoff states here.",
         "status": {
             "idle": "Idle",
             "running_one": "1 active step",
@@ -159,6 +168,7 @@
         "branchLabel": "branch",
         "thinkingLabel": "Thinking",
         "errorLabel": "Error",
+        "modelErrorTitle": "Model call failed",
         "imageGenerateLabel": "Image generation",
         "agentRun": "{{agent}} execution",
         "collapsedSummary": "{{toolCount}} tool calls · {{processCount}} process messages",

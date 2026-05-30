@@ -2,7 +2,7 @@
  * Cron Page
  * Manage scheduled tasks
  */
-import { useEffect, useState, useCallback, type ReactNode, type SelectHTMLAttributes } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   Plus,
   Clock,
@@ -14,20 +14,17 @@ import {
   AlertCircle,
   CheckCircle2,
   XCircle,
-  MessageSquare,
   Loader2,
   Timer,
   History,
   Pause,
-  ChevronDown,
   Bot,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
+import { FormSelect, type FormSelectGroup } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { hostApiFetch } from '@/lib/host-api';
@@ -37,6 +34,7 @@ import { useAgentsStore } from '@/stores/agents';
 import { useChatStore } from '@/stores/chat';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { formatRelativeTime, cn } from '@/lib/utils';
+import { ACCENT_ICON_LG, ACCENT_ICON_SM, SELECTABLE_ACTIVE, SELECTABLE_ACTIVE_OUTLINE, STATUS_SUCCESS } from '@/lib/ui-patterns';
 import { toast } from 'sonner';
 import type { CronJob, CronJobCreateInput, ScheduleType } from '@/types/cron';
 import { CHANNEL_ICONS, CHANNEL_NAMES, type ChannelType } from '@/types/channel';
@@ -214,24 +212,33 @@ function isSupportedCronDeliveryChannel(channelType: string): boolean {
   return TESTED_CRON_DELIVERY_CHANNELS.has(channelType);
 }
 
-interface SelectFieldProps extends SelectHTMLAttributes<HTMLSelectElement> {
-  children: ReactNode;
-}
+const CRON_DIALOG_LABEL = 'text-xs font-medium text-foreground/90';
+const CRON_DIALOG_INPUT =
+  'h-9 rounded-lg border-border/60 bg-surface-input text-xs text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/40';
+const CRON_DIALOG_SELECT = CRON_DIALOG_INPUT;
+const CRON_DIALOG_TEXTAREA = cn(
+  CRON_DIALOG_INPUT,
+  'h-auto min-h-[84px] resize-none py-2 leading-relaxed md:text-xs',
+);
+const CRON_DIALOG_SECTION = 'space-y-3 rounded-xl border border-border/60 bg-card/30 p-4';
 
-function SelectField({ className, children, ...props }: SelectFieldProps) {
+function DialogSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="relative">
-      <Select
-        className={cn(
-          'h-[44px] rounded-xl border-black/10 dark:border-white/10 bg-background text-meta pr-10 [background-image:none] appearance-none',
-          className,
-        )}
-        {...props}
-      >
-        {children}
-      </Select>
-      <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-    </div>
+    <section className={CRON_DIALOG_SECTION}>
+      <div className="space-y-1">
+        <h3 className="text-sm font-medium text-foreground">{title}</h3>
+        {description && <p className="text-2xs text-muted-foreground">{description}</p>}
+      </div>
+      <div className="space-y-3">{children}</div>
+    </section>
   );
 }
 
@@ -305,6 +312,60 @@ function TaskDialog({ job, configuredChannels, onClose, onSave }: TaskDialogProp
   const availableTargetOptions = currentDeliveryTargetOption
     ? [currentDeliveryTargetOption, ...channelTargetOptions.filter((option) => option.value !== deliveryTarget)]
     : channelTargetOptions;
+
+  const agentOptions = useMemo(
+    () => agents.map((agent) => ({ value: agent.id, label: agent.name })),
+    [agents],
+  );
+
+  const deliveryChannelOptions = useMemo(
+    () => availableChannels.map((group) => ({
+      value: group.channelType,
+      label: !isSupportedCronDeliveryChannel(group.channelType)
+        ? `${getChannelDisplayName(group.channelType)} (${t('dialog.channelUnsupportedTag')})`
+        : getChannelDisplayName(group.channelType),
+      disabled: !isSupportedCronDeliveryChannel(group.channelType),
+    })),
+    [availableChannels, t],
+  );
+
+  const deliveryTargetGroups = useMemo((): FormSelectGroup[] => {
+    if (availableTargetOptions.length === 0) return [];
+
+    const pinnedCurrent = hasCurrentDeliveryTarget
+      && !channelTargetOptions.some((option) => option.value === deliveryTarget)
+      ? [{
+        value: deliveryTarget,
+        label: `${t('dialog.currentTarget')} (${deliveryTarget})`,
+      }]
+      : [];
+
+    const users = channelTargetOptions
+      .filter((option) => option.kind === 'user')
+      .map((option) => ({ value: option.value, label: option.label }));
+
+    const chats = channelTargetOptions
+      .filter((option) => option.kind === 'group' || option.kind === 'channel')
+      .map((option) => ({ value: option.value, label: option.label }));
+
+    const groups: FormSelectGroup[] = [];
+    if (pinnedCurrent.length > 0) {
+      groups.push({ label: t('dialog.deliveryTargetGroupDefault'), options: pinnedCurrent });
+    }
+    if (users.length > 0) {
+      groups.push({ label: t('dialog.deliveryTargetGroupUsers'), options: users });
+    }
+    if (chats.length > 0) {
+      groups.push({ label: t('dialog.deliveryTargetGroupChats'), options: chats });
+    }
+
+    if (groups.length > 0) return groups;
+
+    return [{
+      label: t('dialog.deliveryTarget'),
+      options: availableTargetOptions.map((option) => ({ value: option.value, label: option.label })),
+    }];
+  }, [availableTargetOptions, channelTargetOptions, deliveryTarget, hasCurrentDeliveryTarget, t]);
 
   useEffect(() => {
     if (deliveryMode !== 'announce') {
@@ -422,84 +483,88 @@ function TaskDialog({ job, configuredChannels, onClose, onSave }: TaskDialogProp
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
-      <Card className="w-full max-w-lg max-h-[90vh] flex flex-col rounded-3xl border-0 shadow-2xl bg-surface-modal overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <CardHeader className="flex flex-row items-start justify-between pb-2 shrink-0">
-          <div>
-            <CardTitle className="text-2xl font-serif font-normal">{job ? t('dialog.editTitle') : t('dialog.createTitle')}</CardTitle>
-            <CardDescription className="text-sm mt-1 text-foreground/70">{t('dialog.description')}</CardDescription>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-border/60 bg-card/95 shadow-xl backdrop-blur-sm"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border/60 px-5 py-4">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className={ACCENT_ICON_SM}>
+              <Clock className="h-4 w-4" strokeWidth={2} />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-base font-semibold tracking-tight text-foreground">
+                {job ? t('dialog.editTitle') : t('dialog.createTitle')}
+              </h2>
+              <p className="mt-0.5 text-2xs text-muted-foreground">{t('dialog.description')}</p>
+            </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-8 w-8 -mr-2 -mt-2 text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="h-8 w-8 shrink-0 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+          >
             <X className="h-4 w-4" />
           </Button>
-        </CardHeader>
-        <CardContent className="space-y-6 pt-4 overflow-y-auto flex-1 p-6">
-          {/* Name */}
-          <div className="space-y-2.5">
-            <Label htmlFor="name" className="text-sm text-foreground/80 font-bold">{t('dialog.taskName')}</Label>
-            <Input
-              id="name"
-              placeholder={t('dialog.taskNamePlaceholder')}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="h-[44px] rounded-xl font-mono text-meta bg-transparent border-black/10 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary shadow-sm transition-all text-foreground placeholder:text-foreground/40"
-            />
-          </div>
+        </div>
 
-          {/* Message */}
-          <div className="space-y-2.5">
-            <Label htmlFor="message" className="text-sm text-foreground/80 font-bold">{t('dialog.message')}</Label>
-            <Textarea
-              id="message"
-              placeholder={t('dialog.messagePlaceholder')}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={3}
-              className="rounded-xl font-mono text-meta bg-transparent border-black/10 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary shadow-sm transition-all text-foreground placeholder:text-foreground/40 resize-none"
-            />
-          </div>
+        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+          <DialogSection title={t('dialog.sectionBasic')} description={t('dialog.sectionBasicDesc')}>
+            <div className="space-y-1.5">
+              <Label htmlFor="name" className={CRON_DIALOG_LABEL}>{t('dialog.taskName')}</Label>
+              <Input
+                id="name"
+                placeholder={t('dialog.taskNamePlaceholder')}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={CRON_DIALOG_INPUT}
+              />
+            </div>
 
-          {/* Agent */}
-          <div className="space-y-2.5">
-            <Label htmlFor="agent" className="text-sm text-foreground/80 font-bold">{t('dialog.agent')}</Label>
-            <SelectField
-              id="agent"
-              value={selectedAgentId}
-              onChange={(e) => {
-                setSelectedAgentId(e.target.value);
-              }}
-              className="h-[44px] rounded-xl border-black/10 dark:border-white/10 bg-transparent text-meta"
-            >
-              {agents.map((agent) => (
-                <option key={agent.id} value={agent.id}>
-                  {agent.name}
-                </option>
-              ))}
-            </SelectField>
-          </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="message" className={CRON_DIALOG_LABEL}>{t('dialog.message')}</Label>
+              <Textarea
+                id="message"
+                placeholder={t('dialog.messagePlaceholder')}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={3}
+                className={CRON_DIALOG_TEXTAREA}
+              />
+            </div>
 
-          {/* Schedule */}
-          <div className="space-y-2.5">
-            <Label className="text-sm text-foreground/80 font-bold">{t('dialog.schedule')}</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="agent" className={CRON_DIALOG_LABEL}>{t('dialog.agent')}</Label>
+              <FormSelect
+                id="agent"
+                value={selectedAgentId}
+                onValueChange={setSelectedAgentId}
+                options={agentOptions}
+                className={CRON_DIALOG_SELECT}
+              />
+            </div>
+          </DialogSection>
+
+          <DialogSection title={t('dialog.schedule')} description={t('dialog.sectionScheduleDesc')}>
             {!useCustom ? (
               <div className="grid grid-cols-2 gap-2">
                 {schedulePresets.map((preset) => (
-                  <Button
+                  <button
                     key={preset.value}
                     type="button"
-                    variant={schedule === preset.value ? 'default' : 'outline'}
-                    size="sm"
                     onClick={() => setSchedule(preset.value)}
                     className={cn(
-                      "justify-start h-10 rounded-xl font-medium text-meta transition-all",
+                      'flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-xs transition-colors',
                       schedule === preset.value
-                        ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm border-transparent"
-                        : "bg-transparent border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-foreground/80 hover:text-foreground"
+                        ? SELECTABLE_ACTIVE_OUTLINE
+                        : 'border-border/60 bg-surface-input text-foreground/80 hover:border-primary/25 hover:bg-primary/5',
                     )}
                   >
-                    <Timer className="h-4 w-4 mr-2 opacity-70" />
-                    {t(`presets.${preset.key}` as const)}
-                  </Button>
+                    <Timer className="h-3.5 w-3.5 shrink-0 opacity-80" />
+                    <span className="truncate">{t(`presets.${preset.key}` as const)}</span>
+                  </button>
                 ))}
               </div>
             ) : (
@@ -507,11 +572,11 @@ function TaskDialog({ job, configuredChannels, onClose, onSave }: TaskDialogProp
                 placeholder={t('dialog.cronPlaceholder')}
                 value={customSchedule}
                 onChange={(e) => setCustomSchedule(e.target.value)}
-                className="h-[44px] rounded-xl font-mono text-meta bg-transparent border-black/10 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary shadow-sm transition-all text-foreground placeholder:text-foreground/40"
+                className={cn(CRON_DIALOG_INPUT, 'font-mono text-xs')}
               />
             )}
-            <div className="flex items-center justify-between mt-2">
-              <p className="text-xs text-muted-foreground/80 font-medium">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-2xs text-muted-foreground">
                 {schedulePreview ? `${t('card.next')}: ${schedulePreview}` : t('dialog.cronPlaceholder')}
               </p>
               <Button
@@ -519,139 +584,112 @@ function TaskDialog({ job, configuredChannels, onClose, onSave }: TaskDialogProp
                 variant="ghost"
                 size="sm"
                 onClick={() => setUseCustom(!useCustom)}
-                className="text-xs h-7 px-2 text-foreground/60 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-lg"
+                className="h-7 shrink-0 px-2 text-2xs text-muted-foreground hover:text-foreground"
               >
                 {useCustom ? t('dialog.usePresets') : t('dialog.useCustomCron')}
               </Button>
             </div>
-          </div>
+          </DialogSection>
 
-          {/* Delivery */}
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <Label className="text-sm text-foreground/80 font-bold">{t('dialog.deliveryTitle')}</Label>
-              <p className="text-xs text-muted-foreground">{t('dialog.deliveryDescription')}</p>
-            </div>
-
+          <DialogSection title={t('dialog.deliveryTitle')} description={t('dialog.deliveryDescription')}>
             <div className="grid grid-cols-2 gap-2">
-              <Button
-                type="button"
-                variant={deliveryMode === 'none' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setDeliveryMode('none')}
-                className={cn(
-                  'justify-start h-auto min-h-12 rounded-xl px-4 py-3 text-left whitespace-normal',
-                  deliveryMode === 'none'
-                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground border-transparent'
-                    : 'bg-transparent border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-foreground/80 hover:text-foreground',
-                )}
-              >
-                <div>
-                  <div className="text-meta font-semibold">{t('dialog.deliveryModeNone')}</div>
-                  <div className="text-tiny opacity-80">{t('dialog.deliveryModeNoneDesc')}</div>
-                </div>
-              </Button>
-              <Button
-                type="button"
-                variant={deliveryMode === 'announce' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setDeliveryMode('announce')}
-                className={cn(
-                  'justify-start h-auto min-h-12 rounded-xl px-4 py-3 text-left whitespace-normal',
-                  deliveryMode === 'announce'
-                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground border-transparent'
-                    : 'bg-transparent border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-foreground/80 hover:text-foreground',
-                )}
-              >
-                <div>
-                  <div className="text-meta font-semibold">{t('dialog.deliveryModeAnnounce')}</div>
-                  <div className="text-tiny opacity-80">{t('dialog.deliveryModeAnnounceDesc')}</div>
-                </div>
-              </Button>
+              {[{
+                mode: 'none' as const,
+                title: t('dialog.deliveryModeNone'),
+                desc: t('dialog.deliveryModeNoneDesc'),
+              }, {
+                mode: 'announce' as const,
+                title: t('dialog.deliveryModeAnnounce'),
+                desc: t('dialog.deliveryModeAnnounceDesc'),
+              }].map(({ mode, title, desc }) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setDeliveryMode(mode)}
+                  className={cn(
+                    'rounded-lg border px-3 py-2.5 text-left transition-colors',
+                    deliveryMode === mode
+                      ? cn('rounded-lg border px-3 py-2.5 text-left transition-colors', SELECTABLE_ACTIVE_OUTLINE)
+                      : 'border-border/60 bg-surface-input hover:border-primary/25 hover:bg-primary/5',
+                  )}
+                >
+                  <div className={cn('text-xs font-medium', deliveryMode === mode ? 'text-primary' : 'text-foreground')}>
+                    {title}
+                  </div>
+                  <div className="mt-0.5 text-2xs text-muted-foreground">{desc}</div>
+                </button>
+              ))}
             </div>
 
             {deliveryMode === 'announce' && (
-              <div className="space-y-3 rounded-2xl border border-black/5 dark:border-white/5 bg-transparent p-4 shadow-sm">
-                <div className="space-y-2">
-                  <Label htmlFor="delivery-channel" className="text-meta text-foreground/80 font-bold">
+              <div className="space-y-3 rounded-lg border border-border/50 bg-background/40 p-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="delivery-channel" className={CRON_DIALOG_LABEL}>
                     {t('dialog.deliveryChannel')}
                   </Label>
-                  <SelectField
+                  <FormSelect
                     id="delivery-channel"
                     value={effectiveDeliveryChannel}
-                    onChange={(event) => {
-                      setDeliveryChannel(event.target.value);
+                    onValueChange={(value) => {
+                      setDeliveryChannel(value);
                       setSelectedDeliveryAccountId('');
                       setDeliveryTarget('');
                     }}
-                  >
-                    <option value="">{t('dialog.selectChannel')}</option>
-                    {availableChannels.map((group) => (
-                      <option key={group.channelType} value={group.channelType}>
-                        {!isSupportedCronDeliveryChannel(group.channelType)
-                          ? `${getChannelDisplayName(group.channelType)} (${t('dialog.channelUnsupportedTag')})`
-                          : getChannelDisplayName(group.channelType)}
-                      </option>
-                    ))}
-                  </SelectField>
+                    placeholder={t('dialog.selectChannel')}
+                    options={deliveryChannelOptions}
+                    className={CRON_DIALOG_SELECT}
+                  />
                   {availableChannels.length === 0 && (
-                    <p className="text-xs text-muted-foreground">{t('dialog.noChannels')}</p>
+                    <p className="text-2xs text-muted-foreground">{t('dialog.noChannels')}</p>
                   )}
                   {unsupportedDeliveryChannel && (
-                    <p className="text-xs text-destructive">{t('dialog.deliveryChannelUnsupported', { channel: getChannelDisplayName(effectiveDeliveryChannel) })}</p>
+                    <p className="text-2xs text-destructive">{t('dialog.deliveryChannelUnsupported', { channel: getChannelDisplayName(effectiveDeliveryChannel) })}</p>
                   )}
                   {selectedChannel && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-2xs text-muted-foreground">
                       {t('dialog.deliveryDefaultAccountHint', { account: selectedChannel.defaultAccountId })}
                     </p>
                   )}
                 </div>
 
                 {showsAccountSelector && (
-                  <div className="space-y-2">
-                    <Label htmlFor="delivery-account" className="text-meta text-foreground/80 font-bold">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="delivery-account" className={CRON_DIALOG_LABEL}>
                       {t('dialog.deliveryAccount')}
                     </Label>
-                    <SelectField
+                    <FormSelect
                       id="delivery-account"
                       value={effectiveDeliveryAccountId}
-                      onChange={(event) => {
-                        setSelectedDeliveryAccountId(event.target.value);
+                      onValueChange={(value) => {
+                        setSelectedDeliveryAccountId(value);
                         setDeliveryTarget('');
                       }}
+                      placeholder={t('dialog.selectDeliveryAccount')}
                       disabled={deliveryAccountOptions.length === 0}
-                    >
-                      <option value="">
-                        {t('dialog.selectDeliveryAccount')}
-                      </option>
-                      {deliveryAccountOptions.map((option) => (
-                        <option key={option.accountId} value={option.accountId}>
-                          {option.displayName}
-                        </option>
-                      ))}
-                    </SelectField>
-                    <p className="text-xs text-muted-foreground">{t('dialog.deliveryAccountDesc')}</p>
+                      options={deliveryAccountOptions.map((option) => ({
+                        value: option.accountId,
+                        label: option.displayName,
+                      }))}
+                      className={CRON_DIALOG_SELECT}
+                    />
+                    <p className="text-2xs text-muted-foreground">{t('dialog.deliveryAccountDesc')}</p>
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="delivery-target-select" className="text-meta text-foreground/80 font-bold">
+                <div className="space-y-1.5">
+                  <Label htmlFor="delivery-target-select" className={CRON_DIALOG_LABEL}>
                     {t('dialog.deliveryTarget')}
                   </Label>
-                  <SelectField
+                  <FormSelect
                     id="delivery-target-select"
                     value={deliveryTarget}
-                    onChange={(event) => setDeliveryTarget(event.target.value)}
+                    onValueChange={setDeliveryTarget}
+                    placeholder={loadingChannelTargets ? t('dialog.loadingTargets') : t('dialog.selectDeliveryTarget')}
                     disabled={loadingChannelTargets || availableTargetOptions.length === 0}
-                  >
-                    <option value="">{loadingChannelTargets ? t('dialog.loadingTargets') : t('dialog.selectDeliveryTarget')}</option>
-                    {availableTargetOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </SelectField>
-                  <p className="text-xs text-muted-foreground">
+                    groups={deliveryTargetGroups}
+                    className={CRON_DIALOG_SELECT}
+                  />
+                  <p className="text-2xs text-muted-foreground">
                     {availableTargetOptions.length > 0
                       ? t('dialog.deliveryTargetDescAuto')
                       : t('dialog.noDeliveryTargets', { channel: getChannelDisplayName(effectiveDeliveryChannel) })}
@@ -659,40 +697,36 @@ function TaskDialog({ job, configuredChannels, onClose, onSave }: TaskDialogProp
                 </div>
               </div>
             )}
-          </div>
+          </DialogSection>
 
-          {/* Enabled */}
-          <div className="flex items-center justify-between bg-transparent p-4 rounded-2xl shadow-sm border border-black/5 dark:border-white/5">
+          <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card/30 px-4 py-3">
             <div>
-              <Label className="text-sm text-foreground/80 font-bold">{t('dialog.enableImmediately')}</Label>
-              <p className="text-meta text-muted-foreground mt-0.5">
-                {t('dialog.enableImmediatelyDesc')}
-              </p>
+              <Label className={CRON_DIALOG_LABEL}>{t('dialog.enableImmediately')}</Label>
+              <p className="mt-0.5 text-2xs text-muted-foreground">{t('dialog.enableImmediatelyDesc')}</p>
             </div>
-            <Switch checked={enabled} onCheckedChange={setEnabled} />
+            <Switch size="sm" checked={enabled} onCheckedChange={setEnabled} />
           </div>
+        </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" onClick={onClose} className="rounded-full px-6 h-[42px] text-meta font-semibold border-black/20 dark:border-white/20 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 text-foreground/80 hover:text-foreground shadow-sm">
-              {t('common:actions.cancel', 'Cancel')}
-            </Button>
-            <Button onClick={handleSubmit} disabled={saving} className="rounded-full px-6 h-[42px] text-meta font-semibold shadow-sm border border-transparent transition-all">
-              {saving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  {t('common:status.saving', 'Saving...')}
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  {job ? t('dialog.saveChanges') : t('dialog.createTitle')}
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        <div className="flex shrink-0 justify-end gap-2 border-t border-border/60 px-5 py-3">
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-8 px-3 text-xs">
+            {t('common:actions.cancel')}
+          </Button>
+          <Button size="sm" onClick={handleSubmit} disabled={saving} className="h-8 px-3 text-xs">
+            {saving ? (
+              <>
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                {t('common:status.saving')}
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+                {job ? t('dialog.saveChanges') : t('dialog.createTitle')}
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -741,120 +775,123 @@ function CronJobCard({ job, deliveryAccountName, onToggle, onEdit, onDelete, onT
   return (
     <div
       data-testid={`cron-job-card-${job.id}`}
-      className="group flex flex-col p-5 rounded-2xl bg-transparent border border-transparent hover:bg-black/5 dark:hover:bg-white/5 transition-all relative overflow-hidden cursor-pointer"
+      className="group cursor-pointer rounded-xl border border-border/60 bg-card/50 p-4 transition-colors hover:border-primary/30 hover:bg-card/70"
       onClick={onEdit}
     >
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="flex items-center gap-4 min-w-0 flex-1">
-          <div className="h-[46px] w-[46px] shrink-0 flex items-center justify-center text-foreground bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-full shadow-sm group-hover:scale-105 transition-transform">
-            <Clock className={cn("h-5 w-5", job.enabled ? "text-foreground" : "text-muted-foreground")} />
-          </div>
-          <div className="flex flex-col min-w-0 flex-1">
-            <div className="flex items-center gap-2 mb-1 min-w-0">
-              <h3 data-testid={`cron-job-card-title-${job.id}`} className="text-base font-semibold text-foreground truncate min-w-0">{job.name}</h3>
-              <div
-                className={cn(
-                  "w-2 h-2 rounded-full shrink-0",
-                  job.enabled ? "bg-green-500" : "bg-muted-foreground"
-                )}
-                title={job.enabled ? t('stats.active') : t('stats.paused')}
-              />
+      <div className="flex items-start gap-3">
+        <div
+          className={cn(
+            'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border',
+            job.enabled
+              ? STATUS_SUCCESS
+              : 'border-border/50 bg-muted/30 text-muted-foreground',
+          )}
+        >
+          <Clock className="h-4 w-4" strokeWidth={2} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 items-center gap-2">
+                <h3
+                  data-testid={`cron-job-card-title-${job.id}`}
+                  className="truncate text-sm font-medium text-foreground"
+                >
+                  {job.name}
+                </h3>
+                <span
+                  className={cn(
+                    'h-1.5 w-1.5 shrink-0 rounded-full',
+                    job.enabled ? 'bg-primary' : 'bg-muted-foreground/50',
+                  )}
+                  title={job.enabled ? t('stats.active') : t('stats.paused')}
+                />
+              </div>
+              <p className="mt-1 flex items-center gap-1.5 text-2xs text-muted-foreground">
+                <Timer className="h-3 w-3 shrink-0" />
+                <span className="truncate">{parseCronSchedule(job.schedule, t)}</span>
+              </p>
             </div>
-            <p className="text-meta text-muted-foreground flex items-center gap-1.5 min-w-0">
-              <Timer className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">{parseCronSchedule(job.schedule, t)}</span>
-            </p>
+            <div data-testid={`cron-job-card-switch-${job.id}`} onClick={(e) => e.stopPropagation()}>
+              <Switch checked={job.enabled} onCheckedChange={onToggle} />
+            </div>
           </div>
-        </div>
 
-        <div data-testid={`cron-job-card-switch-${job.id}`} className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
-          <Switch
-            checked={job.enabled}
-            onCheckedChange={onToggle}
-          />
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col justify-end mt-2 pl-[62px] min-w-0">
-        <div className="flex items-start gap-2 mb-3 min-w-0">
-          <MessageSquare className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
-          <p className="text-sm text-muted-foreground line-clamp-2 leading-[1.5] min-w-0 flex-1 break-all">
+          <p className="mt-2.5 line-clamp-2 text-xs leading-relaxed text-foreground/75">
             {job.message}
           </p>
-        </div>
 
-        {/* Metadata */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground/80 font-medium mb-3">
-          {job.delivery?.mode === 'announce' && deliveryChannel && (
-            <span className="flex items-center gap-1.5">
-              {deliveryIcon}
-              <span>{deliveryLabel}</span>
-              {deliveryAccountName ? (
-                <span className="max-w-[220px] truncate">{deliveryAccountName}</span>
-              ) : job.delivery.to && (
-                <span className="max-w-[220px] truncate">{job.delivery.to}</span>
-              )}
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-2xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1 rounded-md bg-muted/40 px-1.5 py-0.5">
+              <Bot className="h-3 w-3" />
+              {agentName}
             </span>
-          )}
 
-          {job.lastRun && (
-            <span className="flex items-center gap-1.5">
-              <History className="h-3.5 w-3.5" />
-              {t('card.last')}: {formatRelativeTime(job.lastRun.time)}
-              {job.lastRun.success ? (
-                <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-              ) : (
-                <XCircle className="h-3.5 w-3.5 text-red-500" />
-              )}
-            </span>
-          )}
-
-          {job.nextRun && job.enabled && (
-            <span className="flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5" />
-              {t('card.next')}: {new Date(job.nextRun).toLocaleString()}
-            </span>
-          )}
-
-          <span className="flex items-center gap-1.5">
-            <Bot className="h-3.5 w-3.5" />
-            {agentName}
-          </span>
-        </div>
-
-        {/* Last Run Error */}
-        {job.lastRun && !job.lastRun.success && job.lastRun.error && (
-          <div className="flex items-start gap-2 p-2.5 mb-3 rounded-xl bg-destructive/10 border border-destructive/20 text-meta text-destructive">
-            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-            <span className="line-clamp-2">{job.lastRun.error}</span>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity mt-auto">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleTrigger}
-            disabled={triggering}
-            className="h-8 px-3 text-foreground/70 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-lg text-meta font-medium transition-colors"
-          >
-            {triggering ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-            ) : (
-              <Play className="h-3.5 w-3.5 mr-1.5" />
+            {job.delivery?.mode === 'announce' && deliveryChannel && (
+              <span className="inline-flex max-w-full items-center gap-1 rounded-md bg-muted/40 px-1.5 py-0.5">
+                {deliveryIcon}
+                <span className="truncate">{deliveryLabel}</span>
+                {(deliveryAccountName || job.delivery.to) && (
+                  <span className="truncate opacity-80">
+                    {deliveryAccountName || job.delivery.to}
+                  </span>
+                )}
+              </span>
             )}
-            {t('card.runNow')}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleDelete}
-            className="h-8 px-3 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-lg text-meta font-medium transition-colors"
-          >
-            <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-            {t('common:actions.delete', 'Delete')}
-          </Button>
+
+            {job.lastRun && (
+              <span className="inline-flex items-center gap-1">
+                <History className="h-3 w-3" />
+                {t('card.last')}: {formatRelativeTime(job.lastRun.time)}
+                {job.lastRun.success ? (
+                  <CheckCircle2 className="h-3 w-3 text-primary" />
+                ) : (
+                  <XCircle className="h-3 w-3 text-red-500" />
+                )}
+              </span>
+            )}
+
+            {job.nextRun && job.enabled && (
+              <span className="inline-flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {t('card.next')}: {new Date(job.nextRun).toLocaleString()}
+              </span>
+            )}
+          </div>
+
+          {job.lastRun && !job.lastRun.success && job.lastRun.error && (
+            <div className="mt-3 flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-2.5 py-2 text-2xs text-destructive">
+              <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span className="line-clamp-2">{job.lastRun.error}</span>
+            </div>
+          )}
+
+          <div className="mt-3 flex justify-end gap-1.5 border-t border-border/40 pt-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleTrigger}
+              disabled={triggering}
+              className="h-7 px-2.5 text-2xs text-foreground/80 hover:text-foreground"
+            >
+              {triggering ? (
+                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+              ) : (
+                <Play className="mr-1 h-3 w-3" />
+              )}
+              {t('card.runNow')}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDelete}
+              className="h-7 px-2.5 text-2xs text-destructive/80 hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="mr-1 h-3 w-3" />
+              {t('common:actions.delete')}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -932,162 +969,130 @@ export function Cron() {
   }
 
   return (
-    <div className="flex flex-col -m-6 dark:bg-background h-[calc(100vh-2.5rem)] overflow-hidden">
-      <div className="w-full max-w-5xl mx-auto flex flex-col h-full p-10 pt-16">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between mb-12 shrink-0 gap-4">
+    <div className="flex h-[calc(100vh-2.5rem)] flex-col overflow-hidden -m-6">
+      <div className="mx-auto flex h-full w-full max-w-4xl flex-col px-6 py-8">
+        <div className="mb-6 flex shrink-0 items-start justify-between gap-4">
           <div>
-            <h1 className="text-5xl md:text-6xl font-serif text-foreground mb-3 font-normal tracking-tight">
-              {t('title')}
-            </h1>
-            <p className="text-subtitle text-foreground/70 font-medium">
-              {t('subtitle')}
-            </p>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t('title')}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{t('subtitle')}</p>
           </div>
-          <div className="flex items-center gap-3 md:mt-2">
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => {
                 void fetchJobs();
                 void fetchConfiguredChannels();
               }}
               disabled={!isGatewayRunning}
-              className="h-9 text-meta font-medium rounded-full px-4 border-black/10 dark:border-white/10 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 shadow-none text-foreground/80 hover:text-foreground transition-colors"
+              className="h-8 border-border/60 bg-card/40 px-3 text-xs"
             >
-              <RefreshCw className="h-3.5 w-3.5 mr-2" />
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
               {t('refresh')}
             </Button>
             <Button
+              size="sm"
               onClick={() => {
                 setEditingJob(undefined);
                 setShowDialog(true);
               }}
               disabled={!isGatewayRunning}
-              className="h-9 text-meta font-medium rounded-full px-4 shadow-none"
+              className="h-8 px-3 text-xs"
             >
-              <Plus className="h-3.5 w-3.5 mr-2" />
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
               {t('newTask')}
             </Button>
           </div>
         </div>
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto pr-2 pb-10 min-h-0 -mr-2">
-          {/* Gateway Warning */}
+        <div className="min-h-0 flex-1 overflow-y-auto pb-6">
           {!isGatewayRunning && (
-            <div className="mb-8 p-4 rounded-xl border border-yellow-500/50 bg-yellow-500/10 flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-              <span className="text-yellow-700 dark:text-yellow-400 text-sm font-medium">
-                {t('gatewayWarning')}
-              </span>
+            <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-3 py-2.5">
+              <AlertCircle className="h-4 w-4 shrink-0 text-yellow-500" />
+              <span className="text-xs text-yellow-600 dark:text-yellow-400">{t('gatewayWarning')}</span>
             </div>
           )}
 
-          {/* Error Display */}
           {error && (
-            <div className="mb-8 p-4 rounded-xl border border-destructive/50 bg-destructive/10 flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-destructive" />
-              <span className="text-destructive text-sm font-medium">
-                {error}
-              </span>
+            <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2.5">
+              <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
+              <span className="text-xs text-destructive">{error}</span>
             </div>
           )}
 
-          {/* Statistics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="p-5 rounded-[24px] bg-black/5 dark:bg-white/5 border border-transparent flex flex-col justify-between min-h-[130px] relative overflow-hidden group hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-primary" />
+          <div className="mb-5 grid grid-cols-2 gap-2 md:grid-cols-4">
+            {[
+              { label: t('stats.total'), value: safeJobs.length, icon: Clock, tone: 'primary' as const },
+              { label: t('stats.active'), value: activeJobs.length, icon: Play, tone: 'green' as const },
+              { label: t('stats.paused'), value: pausedJobs.length, icon: Pause, tone: 'yellow' as const },
+              { label: t('stats.failed'), value: failedJobs.length, icon: XCircle, tone: 'red' as const },
+            ].map(({ label, value, icon: Icon, tone }) => (
+              <div
+                key={label}
+                className="rounded-xl border border-border/60 bg-card/40 px-3 py-2.5"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-2xs text-muted-foreground">{label}</p>
+                  <div
+                    className={cn(
+                      'flex h-6 w-6 items-center justify-center rounded-md',
+                      tone === 'primary' && SELECTABLE_ACTIVE,
+                      tone === 'green' && SELECTABLE_ACTIVE,
+                      tone === 'yellow' && 'bg-yellow-500/10 text-yellow-500',
+                      tone === 'red' && 'bg-destructive/10 text-destructive',
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                  </div>
                 </div>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-foreground">{value}</p>
               </div>
-              <div className="mt-4 flex items-baseline gap-3">
-                <p className="text-stat font-serif text-foreground">{safeJobs.length}</p>
-                <p className="text-sm font-medium text-muted-foreground">{t('stats.total')}</p>
-              </div>
-            </div>
-
-            <div className="p-5 rounded-[24px] bg-black/5 dark:bg-white/5 border border-transparent flex flex-col justify-between min-h-[130px] relative overflow-hidden group hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="h-11 w-11 rounded-full bg-green-500/10 flex items-center justify-center">
-                  <Play className="h-5 w-5 text-green-600 dark:text-green-500 ml-0.5" />
-                </div>
-              </div>
-              <div className="mt-4 flex items-baseline gap-3">
-                <p className="text-stat font-serif text-foreground">{activeJobs.length}</p>
-                <p className="text-sm font-medium text-muted-foreground">{t('stats.active')}</p>
-              </div>
-            </div>
-
-            <div className="p-5 rounded-[24px] bg-black/5 dark:bg-white/5 border border-transparent flex flex-col justify-between min-h-[130px] relative overflow-hidden group hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="h-11 w-11 rounded-full bg-yellow-500/10 flex items-center justify-center">
-                  <Pause className="h-5 w-5 text-yellow-600 dark:text-yellow-500" />
-                </div>
-              </div>
-              <div className="mt-4 flex items-baseline gap-3">
-                <p className="text-stat font-serif text-foreground">{pausedJobs.length}</p>
-                <p className="text-sm font-medium text-muted-foreground">{t('stats.paused')}</p>
-              </div>
-            </div>
-
-            <div className="p-5 rounded-[24px] bg-black/5 dark:bg-white/5 border border-transparent flex flex-col justify-between min-h-[130px] relative overflow-hidden group hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="h-11 w-11 rounded-full bg-destructive/10 flex items-center justify-center">
-                  <XCircle className="h-5 w-5 text-destructive" />
-                </div>
-              </div>
-              <div className="mt-4 flex items-baseline gap-3">
-                <p className="text-stat font-serif text-foreground">{failedJobs.length}</p>
-                <p className="text-sm font-medium text-muted-foreground">{t('stats.failed')}</p>
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* Jobs List */}
           {safeJobs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground bg-black/5 dark:bg-white/5 rounded-3xl border border-transparent border-dashed">
-              <Clock className="h-10 w-10 mb-4 opacity-50" />
-              <h3 className="text-lg font-medium mb-2 text-foreground">{t('empty.title')}</h3>
-              <p className="text-sm text-center mb-6 max-w-md">
-                {t('empty.description')}
-              </p>
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-card/30 px-6 py-16 text-center">
+              <div className={ACCENT_ICON_LG}>
+                <Clock className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="mb-1 text-sm font-medium text-foreground">{t('empty.title')}</h3>
+              <p className="mb-5 max-w-sm text-xs text-muted-foreground">{t('empty.description')}</p>
               <Button
+                size="sm"
+                className="h-8 px-4 text-xs"
                 onClick={() => {
                   setEditingJob(undefined);
                   setShowDialog(true);
                 }}
                 disabled={!isGatewayRunning}
-                className="rounded-full px-6 h-10"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
                 {t('empty.create')}
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+            <div className="space-y-2">
               {safeJobs.map((job) => {
                 const channelGroup = configuredChannels.find((group) => group.channelType === job.delivery?.channel);
                 const account = channelGroup?.accounts.find((item) => item.accountId === job.delivery?.accountId);
                 const deliveryAccountName = account ? getDeliveryAccountDisplayName(account, t) : undefined;
                 return (
-                <CronJobCard
-                  key={job.id}
-                  job={job}
-                  deliveryAccountName={deliveryAccountName}
-                  onToggle={(enabled) => handleToggle(job.id, enabled)}
-                  onEdit={() => {
-                    setEditingJob(job);
-                    setShowDialog(true);
-                  }}
-                  onDelete={() => setJobToDelete({ id: job.id })}
-                  onTrigger={() => triggerJob(job.id)}
-                />
+                  <CronJobCard
+                    key={job.id}
+                    job={job}
+                    deliveryAccountName={deliveryAccountName}
+                    onToggle={(enabled) => handleToggle(job.id, enabled)}
+                    onEdit={() => {
+                      setEditingJob(job);
+                      setShowDialog(true);
+                    }}
+                    onDelete={() => setJobToDelete({ id: job.id })}
+                    onTrigger={() => triggerJob(job.id)}
+                  />
                 );
               })}
             </div>
           )}
-
         </div>
       </div>
 
@@ -1106,10 +1111,10 @@ export function Cron() {
 
       <ConfirmDialog
         open={!!jobToDelete}
-        title={t('common:actions.confirm', 'Confirm')}
+        title={t('common:actions.confirm')}
         message={t('card.deleteConfirm')}
-        confirmLabel={t('common:actions.delete', 'Delete')}
-        cancelLabel={t('common:actions.cancel', 'Cancel')}
+        confirmLabel={t('common:actions.delete')}
+        cancelLabel={t('common:actions.cancel')}
         variant="destructive"
         onConfirm={async () => {
           if (jobToDelete) {

@@ -14,6 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { hostApiFetch } from '@/lib/host-api';
 import { invokeIpc } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
+import { SELECTABLE_ACTIVE, toggleIconActiveClass, HOVER_ROW } from '@/lib/ui-patterns';
 import { useGatewayStore } from '@/stores/gateway';
 import { useAgentsStore } from '@/stores/agents';
 import { useChatStore } from '@/stores/chat';
@@ -422,7 +423,7 @@ export function ChatInput({ onSend, onStop, disabled = false, sending = false, i
     const skill = list.find((entry) => entry.name === skillName);
     if (!skill) {
       toast.error(
-        t('composer.skillPreviewNotFound', 'Could not find this skill. Open the skill picker to refresh the list.'),
+        t('composer.skillPreviewNotFound'),
       );
       return;
     }
@@ -795,7 +796,10 @@ export function ChatInput({ onSend, onStop, disabled = false, sending = false, i
         )}
 
         {/* Input Container */}
-        <div className={`relative bg-white dark:bg-card rounded-2xl shadow-sm border px-3 pt-2.5 pb-1.5 transition-all ${dragOver ? 'border-primary ring-1 ring-primary' : 'border-black/10 dark:border-white/10'}`}>
+        <div className={cn(
+          'chat-composer-shell relative rounded-2xl px-3 pt-2.5 pb-1.5 transition-all',
+          dragOver && 'drag-over',
+        )}>
           {selectedTarget && (
             <div className="flex flex-wrap gap-2 pb-1.5">
               <button
@@ -821,7 +825,7 @@ export function ChatInput({ onSend, onStop, disabled = false, sending = false, i
                   onPreviewSkill: (name) => {
                     void handleSkillTokenPreview(name);
                   },
-                  previewTooltip: t('composer.skillPreviewTooltip', 'Preview SKILL.md'),
+                  previewTooltip: t('composer.skillPreviewTooltip'),
                 })}
               </div>
             )}
@@ -856,7 +860,7 @@ export function ChatInput({ onSend, onStop, disabled = false, sending = false, i
             <Button
               variant="ghost"
               size="icon"
-              className="shrink-0 h-8 w-8 rounded-lg text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10 hover:text-foreground transition-colors"
+              className="shrink-0 h-8 w-8 rounded-lg text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
               onClick={pickFiles}
               disabled={inputDisabled || sending}
               title={t('composer.attachFiles')}
@@ -871,8 +875,8 @@ export function ChatInput({ onSend, onStop, disabled = false, sending = false, i
                   size="icon"
                   data-testid="chat-composer-agent"
                   className={cn(
-                    'h-8 w-8 rounded-lg text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10 hover:text-foreground transition-colors',
-                    (pickerOpen || selectedTarget) && 'bg-primary/10 text-primary hover:bg-primary/20'
+                    'h-8 w-8 rounded-lg text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors',
+                    (pickerOpen || selectedTarget) && toggleIconActiveClass(true),
                   )}
                   onClick={() => {
                     setSkillPickerOpen(false);
@@ -884,7 +888,7 @@ export function ChatInput({ onSend, onStop, disabled = false, sending = false, i
                   <AtSign className="h-3.5 w-3.5" />
                 </Button>
                 {pickerOpen && (
-                  <div className="absolute left-0 bottom-full z-20 mb-2 w-72 overflow-hidden rounded-2xl border border-black/10 bg-white p-1.5 shadow-xl dark:border-white/10 dark:bg-card">
+                  <div className="absolute left-0 bottom-full z-20 mb-2 w-72 overflow-hidden rounded-2xl border border-border bg-popover p-1.5 shadow-xl">
                     <div className="px-3 py-2 text-tiny font-medium text-muted-foreground/80">
                       {t('composer.agentPickerTitle', { currentAgent: currentAgentName })}
                     </div>
@@ -926,8 +930,8 @@ export function ChatInput({ onSend, onStop, disabled = false, sending = false, i
                 <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', skillPickerOpen && 'rotate-180')} />
               </button>
               {skillPickerOpen && (
-                <div className="absolute left-0 bottom-full z-20 mb-2 w-80 overflow-hidden rounded-2xl border border-black/10 bg-white p-1.5 shadow-xl dark:border-white/10 dark:bg-card">
-                  <div className="flex items-center gap-2 rounded-xl border border-black/10 bg-black/[0.03] px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
+                <div className="absolute left-0 bottom-full z-20 mb-2 w-80 overflow-hidden rounded-2xl border border-border bg-popover p-1.5 shadow-xl">
+                  <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-input px-3 py-2">
                     <Search className="h-3.5 w-3.5 text-muted-foreground" />
                     <input
                       value={skillQuery}
@@ -1013,7 +1017,7 @@ export function ChatInput({ onSend, onStop, disabled = false, sending = false, i
                 </button>
                 {modelPickerOpen && (
                   <div
-                    className="absolute left-0 bottom-full z-20 mb-2 w-72 overflow-hidden rounded-2xl border border-black/10 bg-white p-1.5 shadow-xl dark:border-white/10 dark:bg-card"
+                    className="absolute left-0 bottom-full z-20 mb-2 w-72 overflow-hidden rounded-2xl border border-border bg-popover p-1.5 shadow-xl"
                     data-testid="chat-model-picker-menu"
                   >
                     <div className="px-3 py-2 text-tiny font-medium text-muted-foreground/80">
@@ -1027,7 +1031,7 @@ export function ChatInput({ onSend, onStop, disabled = false, sending = false, i
                           onClick={() => void handleSelectModel(option.modelRef)}
                           className={cn(
                             'flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors',
-                            option.modelRef === effectiveModelRef ? 'bg-primary/10 text-foreground' : 'hover:bg-black/5 dark:hover:bg-white/5'
+                            option.modelRef === effectiveModelRef ? cn(SELECTABLE_ACTIVE, 'text-foreground') : 'hover:bg-muted/50'
                           )}
                           data-testid={`chat-model-picker-option-${option.label}`}
                         >
@@ -1049,11 +1053,14 @@ export function ChatInput({ onSend, onStop, disabled = false, sending = false, i
               disabled={sending ? !canStop : !canSend}
               size="icon"
               data-testid="chat-composer-send"
-              className={`ml-auto shrink-0 h-8 w-8 rounded-lg transition-colors ${
-                (sending || canSend)
-                  ? 'bg-black/5 dark:bg-white/10 text-foreground hover:bg-black/10 dark:hover:bg-white/20'
-                  : 'text-muted-foreground/50 hover:bg-transparent bg-transparent'
-              }`}
+              className={cn(
+                'ml-auto shrink-0 h-8 w-8 rounded-lg transition-colors',
+                sending
+                  ? 'bg-muted/60 text-foreground hover:bg-muted'
+                  : canSend
+                    ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_-8px_hsl(var(--primary)/0.8)]'
+                    : 'text-muted-foreground/50 hover:bg-transparent bg-transparent',
+              )}
               variant="ghost"
               title={sending ? t('composer.stop') : t('composer.send')}
             >
@@ -1069,7 +1076,7 @@ export function ChatInput({ onSend, onStop, disabled = false, sending = false, i
           <div className="flex items-center gap-1.5">
             <div className={cn(
               "w-1.5 h-1.5 rounded-full",
-              isGatewayUsable ? "bg-green-500/80" : "bg-red-500/80",
+              isGatewayUsable ? "bg-primary/80" : "bg-red-500/80",
             )} />
             <span>
               {t('composer.gatewayStatus', {
@@ -1185,7 +1192,7 @@ function AgentPickerItem({
       onClick={onSelect}
       className={cn(
         'flex w-full flex-col items-start rounded-xl px-3 py-2 text-left transition-colors',
-        selected ? 'bg-primary/10 text-foreground' : 'hover:bg-black/5 dark:hover:bg-white/5'
+        selected ? cn(SELECTABLE_ACTIVE, 'text-foreground') : HOVER_ROW,
       )}
     >
       <span className="text-sm font-medium text-foreground">{agent.name}</span>
@@ -1214,7 +1221,7 @@ function SkillPickerItem({
           onClick={onSelect}
           className={cn(
             'flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-colors',
-            selected ? 'bg-primary/10 text-foreground' : 'hover:bg-black/5 dark:hover:bg-white/5',
+            selected ? cn(SELECTABLE_ACTIVE, 'text-foreground') : HOVER_ROW,
           )}
         >
           <div className="min-w-0">
@@ -1225,7 +1232,7 @@ function SkillPickerItem({
               {skill.sourceLabel}
             </div>
           </div>
-          <span className="rounded-full border border-black/10 bg-black/[0.03] px-2 py-0.5 text-2xs font-medium text-muted-foreground dark:border-white/10 dark:bg-white/[0.04]">
+          <span className="rounded-full border border-border bg-muted/40 px-2 py-0.5 text-2xs font-medium text-muted-foreground">
             {skill.sourceLabel}
           </span>
         </button>

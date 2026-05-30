@@ -5,9 +5,9 @@ import { ROOT, pathMatchesAny, toArray } from './specs.mjs';
 const DIRECT_IPC_PATTERN = /window\.electron\.ipcRenderer\.invoke\s*\(/;
 const DIRECT_GATEWAY_HTTP_PATTERN = /fetch\s*\(\s*['"`]http:\/\/(?:127\.0\.0\.1|localhost):18789/;
 const HOST_API_LOCAL_HTTP_PATTERN = /fetch\s*\(\s*['"`]http:\/\/(?:127\.0\.0\.1|localhost):13210|HOST_API_BASE\s*=\s*`?http:\/\/127\.0\.0\.1:\$\{HOST_API_PORT\}`?/;
-const LOCALHOST_FALLBACK_FLAG = 'clawx:allow-localhost-fallback';
-const SSE_FALLBACK_FLAG = 'clawx:allow-sse-fallback';
-const WS_DIAGNOSTIC_FLAG = 'clawx:gateway-ws-diagnostic';
+const LOCALHOST_FALLBACK_FLAG = 'pingclaw:allow-localhost-fallback';
+const SSE_FALLBACK_FLAG = 'pingclaw:allow-sse-fallback';
+const WS_DIAGNOSTIC_FLAG = 'pingclaw:gateway-ws-diagnostic';
 const GATEWAY_READY_MUTATION_PATTERN = /gatewayReady\s*[:=]\s*(?:true|false)|setStatus\s*\([^)]*gatewayReady|setState\s*\([^)]*gatewayReady/s;
 const COMMUNICATION_PATHS = [
   'src/lib/api-client.ts',

@@ -8,6 +8,7 @@
  * `containerRef`.  The new width is clamped via the store.
  */
 import { useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import {
   ARTIFACT_PANEL_MAX_WIDTH,
@@ -22,6 +23,7 @@ export interface PanelResizeDividerProps {
 }
 
 export function PanelResizeDivider({ containerRef, className }: PanelResizeDividerProps) {
+  const { t } = useTranslation('common');
   const setWidthPct = useArtifactPanel((s) => s.setWidthPct);
   // Store window listeners in refs so the up-handler can remove the
   // matching move-handler without a self-referential closure (which the
@@ -88,12 +90,12 @@ export function PanelResizeDivider({ containerRef, className }: PanelResizeDivid
         'group relative z-10 hidden w-1.5 shrink-0 cursor-col-resize select-none lg:block',
         className,
       )}
-      title="Drag to resize width"
+      title={t('window.resizePanel')}
     >
       {/* Hairline (visible all the time) */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-black/5 transition-colors group-hover:bg-primary/40 dark:bg-white/10"
+        className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-border/80 transition-colors group-hover:bg-primary/40"
       />
       {/* Wider hover hit-state */}
       <span

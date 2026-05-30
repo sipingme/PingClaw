@@ -38,7 +38,7 @@ import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { hostApiFetch } from '@/lib/host-api';
 import { useTranslation } from 'react-i18next';
-import logoSvg from '@/assets/logo.svg';
+import { PingClawLogo } from '@/components/PingClawLogo';
 
 interface NavItemProps {
   to: string;
@@ -50,6 +50,11 @@ interface NavItemProps {
   testId?: string;
 }
 
+const SIDEBAR_NAV_BASE =
+  'sidebar-nav-text flex items-center gap-1.5 rounded-md px-[11px] py-[7px] text-meta transition-colors ring-1 ring-inset ring-transparent text-foreground/75 hover:text-foreground hover:bg-primary/5 dark:hover:bg-primary/10';
+const SIDEBAR_NAV_ACTIVE =
+  'bg-primary/12 text-primary font-medium ring-primary/20 dark:bg-primary/10 dark:ring-primary/25';
+
 function NavItem({ to, icon, label, badge, collapsed, onClick, testId }: NavItemProps) {
   return (
     <NavLink
@@ -58,12 +63,9 @@ function NavItem({ to, icon, label, badge, collapsed, onClick, testId }: NavItem
       data-testid={testId}
       className={({ isActive }) =>
         cn(
-          'sidebar-nav-text flex items-center gap-2 rounded-lg px-2.5 py-1.5 transition-colors',
-          'hover:bg-black/5 dark:hover:bg-white/5 text-foreground/80',
-          isActive
-            ? 'bg-black/5 dark:bg-white/10 text-foreground'
-            : '',
-          collapsed && 'justify-center px-0'
+          SIDEBAR_NAV_BASE,
+          isActive && SIDEBAR_NAV_ACTIVE,
+          collapsed && 'justify-center px-0',
         )
       }
     >
@@ -329,7 +331,7 @@ export function Sidebar() {
     <aside
       data-testid="sidebar"
       className={cn(
-        'relative flex min-h-0 shrink-0 flex-col overflow-hidden bg-surface-sidebar',
+        'relative flex min-h-0 shrink-0 flex-col overflow-hidden border-r border-border/50 bg-surface-sidebar',
         isResizing ? 'transition-none' : 'transition-[width] duration-300',
       )}
       style={{ width: sidebarCollapsed ? 64 : sidebarWidth }}
@@ -344,9 +346,9 @@ export function Sidebar() {
       >
         {!sidebarCollapsed && (
           <div className="flex items-center gap-2 px-2 overflow-hidden">
-            <img src={logoSvg} alt="ClawX" className="h-5 w-auto shrink-0" />
-            <span className="text-sm font-semibold truncate whitespace-nowrap text-foreground/90">
-              ClawX
+            <PingClawLogo className="h-6 w-auto" />
+            <span className="text-sm font-semibold truncate whitespace-nowrap text-foreground">
+              Ping<span className="text-primary">Claw</span>
             </span>
           </div>
         )}
@@ -354,8 +356,8 @@ export function Sidebar() {
           variant="ghost"
           size="icon"
           className={cn(
-            'no-drag h-8 w-8 shrink-0 rounded-lg text-foreground/80',
-            'hover:bg-black/5 hover:text-foreground/80 dark:hover:bg-white/5',
+            'no-drag h-8 w-8 shrink-0 rounded-md text-foreground/80',
+            'hover:bg-primary/10 hover:text-primary',
           )}
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
         >
@@ -368,7 +370,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex flex-col gap-1 px-2">
+      <nav className="flex flex-col gap-1 px-[11px]">
         <button
           type="button"
           data-testid="sidebar-new-chat"
@@ -378,8 +380,8 @@ export function Sidebar() {
             navigate('/');
           }}
           className={cn(
-            'sidebar-nav-text flex items-center gap-2 rounded-lg px-2.5 py-2 transition-colors',
-            'hover:bg-black/5 dark:hover:bg-white/5 text-foreground/80',
+            SIDEBAR_NAV_BASE,
+            'mt-[10px]',
             sidebarCollapsed && 'justify-center px-0',
           )}
         >
@@ -400,7 +402,7 @@ export function Sidebar() {
 
       {/* Session list — below Settings, only when expanded */}
       {!sidebarCollapsed && sessions.length > 0 && (
-        <div className="mt-4 flex-1 overflow-y-auto overflow-x-hidden px-2 pb-2 space-y-1">
+        <div className="mt-4 flex-1 overflow-y-auto overflow-x-hidden px-[11px] pb-[11px] space-y-1">
           {sessionBuckets.map((bucket) => {
             const isBucketExpanded = expandedSessionBuckets[bucket.key] ?? false;
             return (
@@ -411,9 +413,9 @@ export function Sidebar() {
                   aria-expanded={isBucketExpanded}
                   onClick={() => toggleSessionBucket(bucket.key)}
                   className={cn(
-                    'flex w-full items-center gap-1 rounded-md px-2.5 py-1 text-left text-tiny font-medium',
-                    'text-muted-foreground/60 tracking-tight transition-colors',
-                    'hover:bg-black/5 hover:text-muted-foreground dark:hover:bg-white/5',
+                    'flex w-full items-center gap-1 rounded-md px-[13px] py-[7px] text-left text-tiny font-medium',
+                    'text-muted-foreground/70 tracking-tight transition-colors',
+                    'hover:bg-primary/5 hover:text-muted-foreground dark:hover:bg-primary/10',
                   )}
                 >
                   <ChevronRight
@@ -432,7 +434,7 @@ export function Sidebar() {
                   return (
                     <div key={s.key} className="group relative flex items-center">
                       {isEditing ? (
-                        <div className="flex w-full items-center gap-1 px-1.5 py-1">
+                        <div className="flex w-full items-center gap-1 px-[9px] py-[7px]">
                           <Input
                             autoFocus
                             value={editingLabel}
@@ -470,10 +472,10 @@ export function Sidebar() {
                             }}
                             onDoubleClick={() => handleStartRename(s.key, sessionLabel)}
                             className={cn(
-                              'w-full text-left rounded-lg px-2.5 py-1.5 text-meta transition-colors pr-16',
-                              'hover:bg-black/5 dark:hover:bg-white/5',
+                              'w-full text-left rounded-md px-[11px] py-[7px] text-meta transition-colors pr-14',
+                              'hover:bg-primary/5 dark:hover:bg-primary/10',
                               isOnChat && currentSessionKey === s.key
-                                ? 'bg-black/5 dark:bg-white/10 text-foreground font-medium'
+                                ? SIDEBAR_NAV_ACTIVE
                                 : 'text-foreground/75',
                             )}
                           >
@@ -524,16 +526,15 @@ export function Sidebar() {
       )}
 
       {/* Footer */}
-      <div className="mt-auto flex flex-col gap-1 p-2">
+      <div className="mt-auto flex flex-col gap-1 p-[11px]">
         <NavLink
             to="/settings"
             data-testid="sidebar-nav-settings"
             className={({ isActive }) =>
               cn(
-                'sidebar-nav-text flex items-center gap-2 rounded-lg px-2.5 py-1.5 transition-colors',
-                'hover:bg-black/5 dark:hover:bg-white/5 text-foreground/80',
-                isActive && 'bg-black/5 dark:bg-white/10 text-foreground',
-                sidebarCollapsed ? 'justify-center px-0' : ''
+                SIDEBAR_NAV_BASE,
+                isActive && SIDEBAR_NAV_ACTIVE,
+                sidebarCollapsed ? 'justify-center px-0' : '',
               )
             }
           >
@@ -550,7 +551,7 @@ export function Sidebar() {
             data-testid="sidebar-open-dev-console"
             variant="ghost"
             className={cn(
-              'sidebar-nav-text flex h-auto w-full items-center gap-2 rounded-lg px-2.5 py-1.5 transition-colors',
+              'sidebar-nav-text flex h-auto w-full items-center gap-1.5 rounded-lg px-[11px] py-[7px] text-meta transition-colors',
               'hover:bg-black/5 dark:hover:bg-white/5 text-foreground/80',
               sidebarCollapsed ? 'justify-center px-0' : 'justify-start'
             )}
@@ -577,7 +578,7 @@ export function Sidebar() {
           aria-valuemin={220}
           aria-valuemax={420}
           aria-valuenow={sidebarWidth}
-          title="Drag to resize sidebar"
+          title={t('common:window.resizeSidebar')}
           onPointerDown={handleResizePointerDown}
           className="no-drag group absolute inset-y-0 right-0 z-20 w-2 translate-x-1/2 cursor-col-resize select-none"
         >

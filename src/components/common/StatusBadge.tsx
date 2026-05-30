@@ -34,7 +34,7 @@ export function StatusBadge({ status, label, showDot = true }: StatusBadgeProps)
         <span
           className={cn(
             'h-1.5 w-1.5 rounded-full',
-            config.variant === 'success' && 'bg-green-600',
+            config.variant === 'success' && 'bg-primary',
             config.variant === 'secondary' && 'bg-gray-400',
             config.variant === 'warning' && 'bg-yellow-600 animate-pulse',
             config.variant === 'destructive' && 'bg-red-600'

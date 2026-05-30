@@ -66,7 +66,7 @@ interface SettingsState {
 }
 
 const defaultSettings = {
-  theme: 'system' as Theme,
+  theme: 'dark' as Theme,
   language: resolveSupportedLanguage(typeof navigator !== 'undefined' ? navigator.language : undefined),
   startMinimized: false,
   launchAtStartup: false,
@@ -190,7 +190,7 @@ export const useSettingsStore = create<SettingsState>()(
       resetSettings: () => set(defaultSettings),
     }),
     {
-      name: 'clawx-settings',
+      name: 'pingclaw-settings',
     }
   )
 );

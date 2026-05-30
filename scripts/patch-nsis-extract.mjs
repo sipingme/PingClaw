@@ -29,15 +29,15 @@ export const EXTRACT_APP_PACKAGE_NSH = join(
 
 const PATCHED_MACRO = [
   '!macro extractUsing7za FILE',
-  '  ; ClawX-patched: extract directly to $INSTDIR (skip temp + CopyFiles).',
+  '  ; PingClaw-patched: extract directly to $INSTDIR (skip temp + CopyFiles).',
   '  StrCpy $R9 0',
-  '  clawx_extract_attempt:',
+  '  pingclaw_extract_attempt:',
   '    IntOp $R9 $R9 + 1',
-  '    DetailPrint "Extracting ClawX application files (attempt $R9, please wait)..."',
+  '    DetailPrint "Extracting PingClaw application files (attempt $R9, please wait)..."',
   '    SetOutPath $INSTDIR',
   '    ClearErrors',
   '    Nsis7z::Extract "${FILE}"',
-  '    IfErrors 0 clawx_extract_done',
+  '    IfErrors 0 pingclaw_extract_done',
   '    ${if} $R9 < 3',
   '      DetailPrint "Releasing file locks before retry..."',
   '      nsExec::ExecToStack \'taskkill /F /T /IM "${APP_EXECUTABLE_FILENAME}"\'',
@@ -47,12 +47,12 @@ const PATCHED_MACRO = [
   '      Pop $0',
   '      Pop $1',
   '      Sleep 3000',
-  '      Goto clawx_extract_attempt',
+  '      Goto pingclaw_extract_attempt',
   '    ${endIf}',
-  '    MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "$(appCannotBeClosed)" /SD IDRETRY IDRETRY clawx_extract_attempt IDCANCEL clawx_extract_abort',
-  '  clawx_extract_abort:',
+  '    MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "$(appCannotBeClosed)" /SD IDRETRY IDRETRY pingclaw_extract_attempt IDCANCEL pingclaw_extract_abort',
+  '  pingclaw_extract_abort:',
   '    Quit',
-  '  clawx_extract_done:',
+  '  pingclaw_extract_done:',
   '!macroend',
 ].join('\n');
 
@@ -67,7 +67,7 @@ export function patchNsisExtractTemplate(targetPath = EXTRACT_APP_PACKAGE_NSH) {
   }
 
   const original = readFileSync(targetPath, 'utf8');
-  if (original.includes('ClawX-patched')) {
+  if (original.includes('PingClaw-patched')) {
     return true;
   }
 

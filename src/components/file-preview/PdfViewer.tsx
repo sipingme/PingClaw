@@ -174,7 +174,7 @@ export default function PdfViewer({
       >
         <iframe
           src={withViewerParams(currentState.url)}
-          title={fileName ?? t('filePreview.pdf.title', 'PDF preview')}
+          title={fileName ?? t('filePreview.pdf.title')}
           className={cn(
             'h-full w-full border-0 bg-white transition-opacity duration-200',
             workspaceSurface && 'rounded-lg shadow-sm ring-1 ring-black/10 dark:ring-white/10',

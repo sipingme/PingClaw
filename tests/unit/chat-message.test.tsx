@@ -379,7 +379,7 @@ describe('ChatMessage word wrapping', () => {
 });
 
 describe('ChatMessage reply styling', () => {
-  it('renders assistant replies as plain Markdown without a rounded bubble wrapper', () => {
+  it('renders assistant replies in a card-style Markdown surface', () => {
     const message: RawMessage = {
       role: 'assistant',
       content: 'Direct Markdown reply with **bold** text.',
@@ -388,20 +388,21 @@ describe('ChatMessage reply styling', () => {
     const { container } = render(<ChatMessage message={message} />);
     const prose = container.querySelector('.prose');
     expect(prose).not.toBeNull();
-    expect(prose?.classList.contains('rounded-2xl')).toBe(false);
+    expect(prose?.classList.contains('prose-chat')).toBe(true);
+    expect(prose?.classList.contains('rounded-xl')).toBe(true);
+    expect(prose?.classList.contains('bg-card/45')).toBe(true);
     expect(prose?.classList.contains('bg-black/5')).toBe(false);
     expect(prose?.classList.contains('dark:bg-white/5')).toBe(false);
-    expect(prose?.parentElement?.classList.contains('rounded-2xl')).toBe(false);
   });
 
-  it('keeps user messages in the blue rounded bubble', () => {
+  it('keeps user messages in the teal rounded bubble', () => {
     const message: RawMessage = {
       role: 'user',
       content: 'Keep the prompt bubble.',
     };
 
     const { container } = render(<ChatMessage message={message} />);
-    const bubble = container.querySelector('.rounded-2xl.bg-brand');
+    const bubble = container.querySelector('.rounded-xl.bg-brand');
     expect(bubble).not.toBeNull();
     expect(bubble).toHaveTextContent('Keep the prompt bubble.');
   });

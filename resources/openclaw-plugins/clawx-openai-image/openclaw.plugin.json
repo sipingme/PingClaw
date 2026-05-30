@@ -1,17 +1,17 @@
 {
-  "id": "clawx-openai-image",
-  "name": "ClawX OpenAI Image",
-  "description": "Independent OpenAI-compatible image generation provider managed by ClawX.",
+  "id": "pingclaw-openai-image",
+  "name": "PingClaw OpenAI Image",
+  "description": "Independent OpenAI-compatible image generation provider managed by PingClaw.",
   "version": "0.1.0",
   "entry": "index.mjs",
   "enabledByDefault": false,
   "contracts": {
     "imageGenerationProviders": [
-      "clawx-openai-image"
+      "pingclaw-openai-image"
     ]
   },
   "imageGenerationProviderMetadata": {
-    "clawx-openai-image": {
+    "pingclaw-openai-image": {
       "capabilities": [
         "image"
       ],

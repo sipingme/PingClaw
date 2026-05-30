@@ -24,6 +24,7 @@ import { useSkillsStore } from '@/stores/skills';
 import { useGatewayStore } from '@/stores/gateway';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { cn } from '@/lib/utils';
+import { ACCENT_ICON_LG, HOVER_ROW_SUBTLE } from '@/lib/ui-patterns';
 import { invokeIpc } from '@/lib/api-client';
 import { hostApiFetch } from '@/lib/host-api';
 import { trackUiEvent } from '@/lib/telemetry';
@@ -182,7 +183,7 @@ function SkillDetailDialog({ skill, isOpen, onClose, onToggle, onUninstall, onOp
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-[38px] w-[38px] border-black/10 dark:border-white/10"
+                  className={cn('h-[38px] w-[38px] border-black/10 dark:border-white/10', HOVER_ROW_SUBTLE)}
                   disabled={!skill.baseDir}
                   onClick={handleCopyPath}
                   title={t('detail.copyPath')}
@@ -192,7 +193,7 @@ function SkillDetailDialog({ skill, isOpen, onClose, onToggle, onUninstall, onOp
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-[38px] w-[38px] border-black/10 dark:border-white/10"
+                  className={cn('h-[38px] w-[38px] border-black/10 dark:border-white/10', HOVER_ROW_SUBTLE)}
                   disabled={!skill.baseDir}
                   onClick={() => onOpenFolder?.(skill)}
                   title={t('detail.openActualFolder')}
@@ -499,29 +500,27 @@ export function Skills() {
   }
 
   return (
-    <div data-testid="skills-page" className="flex flex-col -m-6 dark:bg-background h-[calc(100vh-2.5rem)] overflow-hidden">
-      <div className="w-full max-w-5xl mx-auto flex flex-col h-full p-10 pt-16">
+    <div data-testid="skills-page" className="flex h-[calc(100vh-2.5rem)] flex-col overflow-hidden -m-6">
+      <div className="mx-auto flex h-full w-full max-w-4xl flex-col px-6 py-8">
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between mb-6 shrink-0 gap-4">
+        <div className="mb-6 flex shrink-0 items-start justify-between gap-4">
           <div>
-            <h1 className="text-5xl md:text-6xl font-serif text-foreground mb-3 font-normal tracking-tight">
-              {t('title')}
-            </h1>
-            <p className="text-subtitle text-foreground/70 font-medium">
-              {t('subtitle')}
-            </p>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t('title')}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{t('subtitle')}</p>
           </div>
 
-          <div className="flex items-center gap-3 md:mt-2">
+          <div className="flex items-center gap-2">
             {hasInstalledSkills && (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleOpenSkillsFolder}
-                className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors shrink-0 text-meta font-medium px-4 h-8 rounded-full border border-black/10 dark:border-white/10 flex items-center justify-center text-foreground/80 hover:text-foreground"
+                className="h-8 border-border/60 bg-card/40 px-3 text-xs"
               >
-                <FolderOpen className="h-4 w-4 mr-2" />
+                <FolderOpen className="mr-1.5 h-3.5 w-3.5" />
                 {t('openFolder')}
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -532,23 +531,23 @@ export function Skills() {
             data-testid="skills-gateway-banner"
             data-state={gatewayBannerState}
             className={cn(
-              "mb-6 p-4 rounded-xl border flex items-center gap-3",
+              'mb-4 flex items-center gap-2.5 rounded-xl border px-3 py-2.5',
               gatewayBannerState === 'starting'
-                ? "border-blue-500/40 bg-blue-500/10"
-                : "border-yellow-500/50 bg-yellow-500/10",
+                ? 'border-blue-500/30 bg-blue-500/10'
+                : 'border-yellow-500/30 bg-yellow-500/10',
             )}
           >
             <AlertCircle className={cn(
-              "h-5 w-5",
+              'h-4 w-4 shrink-0',
               gatewayBannerState === 'starting'
-                ? "text-blue-600 dark:text-blue-400"
-                : "text-yellow-600 dark:text-yellow-400",
+                ? 'text-blue-600 dark:text-blue-400'
+                : 'text-yellow-500',
             )} />
             <span className={cn(
-              "text-sm font-medium",
+              'text-xs',
               gatewayBannerState === 'starting'
-                ? "text-blue-700 dark:text-blue-400"
-                : "text-yellow-700 dark:text-yellow-400",
+                ? 'text-blue-600 dark:text-blue-400'
+                : 'text-yellow-600 dark:text-yellow-400',
             )}>
               {gatewayBannerState === 'starting' ? t('gatewayStarting') : t('gatewayWarning')}
             </span>
@@ -556,55 +555,55 @@ export function Skills() {
         )}
 
         {/* Sub Navigation and Actions */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-black/10 dark:border-white/10 pb-4 mb-4 shrink-0 gap-4">
-          <div className="flex items-center flex-wrap gap-4 text-sm">
-            <div className="relative group flex items-center bg-black/5 dark:bg-white/5 rounded-full px-3 py-1.5 focus-within:bg-black/10 transition-colors border border-transparent focus-within:border-black/10 dark:focus-within:border-white/10 mr-2">
-              <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <div className="mb-4 flex shrink-0 flex-col justify-between gap-4 border-b border-border/60 pb-4 md:flex-row md:items-center">
+          <div className="flex flex-wrap items-center gap-4 text-xs">
+            <div className="group relative mr-2 flex items-center rounded-lg border border-border/60 bg-surface-input px-3 py-1.5 focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/30">
+              <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               <input
                 placeholder={t('search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="ml-2 bg-transparent outline-none w-28 md:w-40 font-normal placeholder:text-foreground/50 text-meta text-foreground"
+                className="ml-2 w-28 bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground md:w-40"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="text-foreground/50 hover:text-foreground shrink-0 ml-1"
+                  className="ml-1 shrink-0 text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
 
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
               <button
                 onClick={() => setSelectedSource('all')}
-                className={cn("font-medium transition-colors flex items-center gap-1.5", selectedSource === 'all' ? "text-foreground" : "text-muted-foreground hover:text-foreground")}
+                className={cn('font-medium transition-colors', selectedSource === 'all' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground')}
               >
                 {t('filter.all', { count: sourceStats.all })}
               </button>
               <button
                 onClick={() => setSelectedSource('built-in')}
-                className={cn("font-medium transition-colors flex items-center gap-1.5", selectedSource === 'built-in' ? "text-foreground" : "text-muted-foreground hover:text-foreground")}
+                className={cn('font-medium transition-colors', selectedSource === 'built-in' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground')}
               >
                 {t('filter.builtIn', { count: sourceStats.builtIn })}
               </button>
               <button
                 onClick={() => setSelectedSource('marketplace')}
-                className={cn("font-medium transition-colors flex items-center gap-1.5", selectedSource === 'marketplace' ? "text-foreground" : "text-muted-foreground hover:text-foreground")}
+                className={cn('font-medium transition-colors', selectedSource === 'marketplace' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground')}
               >
                 {t('filter.marketplace', { count: sourceStats.marketplace })}
               </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex shrink-0 items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => bulkToggleVisible(true)}
-              className="h-8 text-meta font-medium rounded-md px-3 border-black/10 dark:border-white/10 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 shadow-none"
+              className="h-8 border-border/60 bg-card/40 px-3 text-xs"
             >
               {t('actions.enableVisible')}
             </Button>
@@ -612,7 +611,7 @@ export function Skills() {
               variant="outline"
               size="sm"
               onClick={() => bulkToggleVisible(false)}
-              className="h-8 text-meta font-medium rounded-md px-3 border-black/10 dark:border-white/10 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 shadow-none"
+              className="h-8 border-border/60 bg-card/40 px-3 text-xs"
             >
               {t('actions.disableVisible')}
             </Button>
@@ -623,7 +622,7 @@ export function Skills() {
                 setInstallQuery('');
                 setInstallSheetOpen(true);
               }}
-              className="h-8 text-meta font-medium rounded-md px-3 border-black/10 dark:border-white/10 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 shadow-none"
+              className="h-8 border-border/60 bg-card/40 px-3 text-xs"
             >
               {t('actions.installSkill')}
             </Button>
@@ -634,20 +633,20 @@ export function Skills() {
                 void fetchSkills();
               }}
               disabled={!gatewayRunning}
-              className="h-8 w-8 ml-1 rounded-md border-black/10 dark:border-white/10 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 shadow-none text-muted-foreground hover:text-foreground"
+              className="h-8 w-8 border-border/60 bg-card/40 text-muted-foreground hover:text-foreground"
               title={t('refresh')}
             >
-              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+              <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
             </Button>
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto pr-2 pb-10 min-h-0 -mr-2">
+        <div className="min-h-0 flex-1 overflow-y-auto pb-6">
           {error && (
-            <div className="mb-4 p-4 rounded-xl border border-destructive/50 bg-destructive/10 text-destructive text-sm font-medium flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 shrink-0" />
-              <span>
+            <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2.5">
+              <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
+              <span className="text-xs text-destructive">
                 {FETCH_ERROR_CODES.has(error)
                   ? t(`toast.${error}`, { path: skillsDirPath })
                   : error}
@@ -655,53 +654,57 @@ export function Skills() {
             </div>
           )}
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             {filteredSkills.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-                <Puzzle className="h-10 w-10 mb-4 opacity-50" />
-                <p>{searchQuery ? t('noSkillsSearch') : t('noSkillsAvailable')}</p>
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-card/30 px-6 py-16 text-center">
+                <div className={ACCENT_ICON_LG}>
+                  <Puzzle className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="mb-1 text-sm font-medium text-foreground">
+                  {searchQuery ? t('noSkillsSearch') : t('noSkillsAvailable')}
+                </h3>
               </div>
             ) : (
               filteredSkills.map((skill) => (
                 <div
                   key={skill.id}
-                  className="group flex flex-row items-center justify-between py-3.5 px-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer border-b border-black/5 dark:border-white/5 last:border-0"
+                  className="group flex cursor-pointer flex-row items-center justify-between rounded-xl border border-border/60 bg-card/50 p-4 transition-colors hover:border-primary/30 hover:bg-card/70"
                   onClick={() => setSelectedSkill(skill)}
                 >
-                  <div className="flex items-start gap-4 flex-1 overflow-hidden pr-4">
-                    <div className="h-10 w-10 shrink-0 flex items-center justify-center text-2xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl overflow-hidden">
+                  <div className="flex flex-1 items-start gap-3 overflow-hidden pr-4">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/50 bg-muted/30 text-lg">
                       {skill.icon || '🧩'}
                     </div>
-                    <div className="flex flex-col overflow-hidden">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-sm font-semibold text-foreground truncate">{skill.name}</h3>
+                    <div className="flex min-w-0 flex-col overflow-hidden">
+                      <div className="mb-0.5 flex min-w-0 items-center gap-2">
+                        <h3 className="truncate text-sm font-medium text-foreground">{skill.name}</h3>
                         {skill.isCore ? (
-                          <Lock className="h-3 w-3 text-muted-foreground" />
+                          <Lock className="h-3 w-3 shrink-0 text-muted-foreground" />
                         ) : skill.isBundled ? (
-                          <Puzzle className="h-3 w-3 text-blue-500/70" />
+                          <Puzzle className="h-3 w-3 shrink-0 text-primary/70" />
                         ) : null}
                         {skill.slug && skill.slug !== skill.name ? (
-                          <span className="text-tiny font-mono px-1.5 py-0.5 rounded border border-black/10 dark:border-white/10 text-muted-foreground">
+                          <span className="shrink-0 rounded border border-border/60 px-1.5 py-0.5 font-mono text-2xs text-muted-foreground">
                             {skill.slug}
                           </span>
                         ) : null}
                       </div>
-                      <p className="text-sm text-muted-foreground line-clamp-1 pr-6 leading-relaxed">
+                      <p className="line-clamp-1 pr-6 text-xs leading-relaxed text-muted-foreground">
                         {skill.description}
                       </p>
-                      <div className="mt-1 flex items-center gap-2 text-tiny text-foreground/55 min-w-0">
-                        <Badge variant="secondary" className="shrink-0 whitespace-nowrap px-1.5 py-0 h-5 text-2xs font-medium bg-black/5 dark:bg-white/10 border-0 shadow-none">
+                      <div className="mt-1 flex min-w-0 items-center gap-2 text-2xs text-muted-foreground">
+                        <Badge variant="secondary" className="h-5 shrink-0 whitespace-nowrap border-0 bg-muted/50 px-1.5 py-0 text-2xs font-medium shadow-none">
                           {resolveSkillSourceLabel(skill, t)}
                         </Badge>
-                        <span className="truncate font-mono min-w-0">
+                        <span className="min-w-0 truncate font-mono">
                           {skill.baseDir || t('detail.pathUnavailable')}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-6 shrink-0" onClick={e => e.stopPropagation()}>
+                  <div className="flex shrink-0 items-center gap-4" onClick={e => e.stopPropagation()}>
                     {skill.version && (
-                      <span className="text-meta font-mono text-muted-foreground">
+                      <span className="font-mono text-2xs text-muted-foreground">
                         v{skill.version}
                       </span>
                     )}
@@ -723,17 +726,17 @@ export function Skills() {
           className="w-full sm:max-w-[560px] p-0 flex flex-col border-l border-black/10 dark:border-white/10 bg-surface-modal shadow-[0_0_40px_rgba(0,0,0,0.2)]"
           side="right"
         >
-          <div className="px-7 py-6 border-b border-black/10 dark:border-white/10">
-            <h2 className="text-2xl font-serif text-foreground font-normal tracking-tight">{t('marketplace.installDialogTitle')}</h2>
-            <p className="mt-1 text-meta text-foreground/70">{t('marketplace.installDialogSubtitle')}</p>
-            <div className="mt-4 flex flex-col md:flex-row gap-2">
-              <div className="relative flex items-center bg-black/5 dark:bg-white/5 rounded-xl px-3 py-2 border border-black/10 dark:border-white/10 flex-1">
-                <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <div className="border-b border-border/60 px-5 py-4">
+            <h2 className="text-base font-semibold tracking-tight text-foreground">{t('marketplace.installDialogTitle')}</h2>
+            <p className="mt-0.5 text-2xs text-muted-foreground">{t('marketplace.installDialogSubtitle')}</p>
+            <div className="mt-4 flex flex-col gap-2 md:flex-row">
+              <div className="relative flex flex-1 items-center rounded-lg border border-border/60 bg-surface-input px-3 py-2">
+                <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <Input
                   placeholder={t('searchMarketplace')}
                   value={installQuery}
                   onChange={(e) => setInstallQuery(e.target.value)}
-                  className="ml-2 h-auto border-0 bg-transparent p-0 shadow-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 text-meta"
+                  className="ml-2 h-auto border-0 bg-transparent p-0 text-xs shadow-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
                 {installQuery && (
                   <button
@@ -748,7 +751,7 @@ export function Skills() {
               <Button
                 variant="outline"
                 disabled
-                className="h-10 rounded-xl border-black/10 dark:border-white/10 bg-transparent text-muted-foreground"
+                className="h-9 rounded-lg border-border/60 bg-card/40 px-3 text-xs text-muted-foreground"
               >
                 {t('marketplace.sourceLabel')}: {t('marketplace.sourceClawHub')}
               </Button>
@@ -757,9 +760,9 @@ export function Skills() {
 
           <div className="flex-1 overflow-y-auto px-6 py-4">
             {searchError && (
-              <div className="mb-4 p-4 rounded-xl border border-destructive/50 bg-destructive/10 text-destructive text-sm font-medium flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 shrink-0" />
-                <span>
+              <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2.5">
+                <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
+                <span className="text-xs text-destructive">
                   {SEARCH_ERROR_CODES.has(searchError.replace('Error: ', ''))
                     ? t(`toast.${searchError.replace('Error: ', '')}`, { path: skillsDirPath })
                     : searchError}
@@ -770,12 +773,12 @@ export function Skills() {
             {searching && (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 <LoadingSpinner size="lg" />
-                <p className="mt-4 text-sm">{t('marketplace.searching')}</p>
+                <p className="mt-4 text-xs">{t('marketplace.searching')}</p>
               </div>
             )}
 
             {!searching && searchResults.length > 0 && (
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-2">
                 {searchResults.map((skill) => {
                   const isInstalled = safeSkills.some(s => s.id === skill.slug || s.name === skill.name);
                   const isInstallLoading = !!installing[skill.slug];
@@ -783,28 +786,28 @@ export function Skills() {
                   return (
                     <div
                       key={skill.slug}
-                      className="group flex flex-row items-center justify-between py-3.5 px-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer border-b border-black/5 dark:border-white/5 last:border-0"
+                      className="group flex cursor-pointer flex-row items-center justify-between rounded-xl border border-border/60 bg-card/50 p-4 transition-colors hover:border-primary/30 hover:bg-card/70"
                       onClick={() => invokeIpc('shell:openExternal', `https://clawhub.ai/s/${skill.slug}`)}
                     >
-                      <div className="flex items-start gap-4 flex-1 overflow-hidden pr-4">
-                        <div className="h-10 w-10 shrink-0 flex items-center justify-center text-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl overflow-hidden">
+                      <div className="flex flex-1 items-start gap-3 overflow-hidden pr-4">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/50 bg-muted/30 text-lg">
                           📦
                         </div>
-                        <div className="flex flex-col overflow-hidden">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-sm font-semibold text-foreground truncate">{skill.name}</h3>
+                        <div className="flex min-w-0 flex-col overflow-hidden">
+                          <div className="mb-0.5 flex items-center gap-2">
+                            <h3 className="truncate text-sm font-medium text-foreground">{skill.name}</h3>
                             {skill.author && (
-                              <span className="text-xs text-muted-foreground">• {skill.author}</span>
+                              <span className="text-2xs text-muted-foreground">• {skill.author}</span>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground line-clamp-1 pr-6 leading-relaxed">
+                          <p className="line-clamp-1 pr-6 text-xs leading-relaxed text-muted-foreground">
                             {skill.description}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4 shrink-0" onClick={e => e.stopPropagation()}>
+                      <div className="flex shrink-0 items-center gap-3" onClick={e => e.stopPropagation()}>
                         {skill.version && (
-                          <span className="text-meta font-mono text-muted-foreground mr-2">
+                          <span className="mr-2 font-mono text-2xs text-muted-foreground">
                             v{skill.version}
                           </span>
                         )}
@@ -814,7 +817,7 @@ export function Skills() {
                             size="sm"
                             onClick={() => handleUninstall(skill.slug)}
                             disabled={isInstallLoading}
-                            className="h-8 shadow-none"
+                            className="h-8 px-3 text-xs shadow-none"
                           >
                             {isInstallLoading ? <LoadingSpinner size="sm" /> : <Trash2 className="h-3.5 w-3.5" />}
                           </Button>
@@ -824,9 +827,9 @@ export function Skills() {
                             size="sm"
                             onClick={() => handleInstall(skill.slug)}
                             disabled={isInstallLoading}
-                            className="h-8 px-4 rounded-full shadow-none font-medium text-xs"
+                            className="h-8 px-3 text-xs shadow-none"
                           >
-                            {isInstallLoading ? <LoadingSpinner size="sm" /> : t('marketplace.install', 'Install')}
+                            {isInstallLoading ? <LoadingSpinner size="sm" /> : t('marketplace.install')}
                           </Button>
                         )}
                       </div>
@@ -837,9 +840,9 @@ export function Skills() {
             )}
 
             {!searching && searchResults.length === 0 && !searchError && (
-              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-                <Package className="h-10 w-10 mb-4 opacity-50" />
-                <p>{installQuery.trim() ? t('marketplace.noResults') : t('marketplace.emptyPrompt')}</p>
+              <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+                <Package className="mb-4 h-10 w-10 opacity-50" />
+                <p className="text-xs">{installQuery.trim() ? t('marketplace.noResults') : t('marketplace.emptyPrompt')}</p>
               </div>
             )}
           </div>

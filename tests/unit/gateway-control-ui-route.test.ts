@@ -5,7 +5,7 @@ import type { HostApiContext } from '@electron/api/context';
 import { handleGatewayRoutes } from '@electron/api/routes/gateway';
 
 vi.mock('@electron/utils/store', () => ({
-  getSetting: vi.fn(async () => 'clawx-route-token'),
+  getSetting: vi.fn(async () => 'pingclaw-route-token'),
 }));
 
 function createResponse() {
@@ -62,8 +62,8 @@ describe('GET /api/gateway/control-ui', () => {
     expect(response.statusCode).toBe(200);
     expect(response.json).toMatchObject({
       success: true,
-      url: 'http://127.0.0.1:19001/#token=clawx-route-token',
-      token: 'clawx-route-token',
+      url: 'http://127.0.0.1:19001/#token=pingclaw-route-token',
+      token: 'pingclaw-route-token',
       port: 19001,
     });
   });
@@ -81,8 +81,8 @@ describe('GET /api/gateway/control-ui', () => {
     expect(response.statusCode).toBe(200);
     expect(response.json).toMatchObject({
       success: true,
-      url: 'http://127.0.0.1:19001/dreaming#token=clawx-route-token',
-      token: 'clawx-route-token',
+      url: 'http://127.0.0.1:19001/dreaming#token=pingclaw-route-token',
+      token: 'pingclaw-route-token',
       port: 19001,
     });
   });
@@ -96,6 +96,6 @@ describe('GET /api/gateway/control-ui', () => {
       createContext(),
     );
 
-    expect(response.json.url).toBe('http://127.0.0.1:19001/#token=clawx-route-token');
+    expect(response.json.url).toBe('http://127.0.0.1:19001/#token=pingclaw-route-token');
   });
 });

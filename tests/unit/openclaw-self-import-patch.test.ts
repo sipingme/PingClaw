@@ -13,7 +13,7 @@ import {
 const tempRoots: string[] = [];
 
 async function createTempOpenClawBundle(): Promise<string> {
-  const root = await mkdtemp(path.join(tmpdir(), 'clawx-openclaw-self-import-'));
+  const root = await mkdtemp(path.join(tmpdir(), 'pingclaw-openclaw-self-import-'));
   tempRoots.push(root);
   return root;
 }

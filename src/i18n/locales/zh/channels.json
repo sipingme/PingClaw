@@ -98,7 +98,9 @@
         "generateQRCode": "生成二维码",
         "updateAndReconnect": "更新并重新连接",
         "saveAndConnect": "保存并连接",
-        "envVar": "环境变量: {{var}}"
+        "envVar": "环境变量: {{var}}",
+        "credentialsSection": "连接凭证",
+        "credentialsSectionDesc": "填写频道接入所需的密钥与标识"
     },
     "health": {
         "state": {
@@ -189,7 +191,7 @@
             "description": "通过腾讯官方 OpenClaw 插件扫码连接个人微信",
             "docsUrl": "https://icnnp7d0dymg.feishu.cn/wiki/GHYZwuPCriF0gWkXwkFcJ9zon3b",
             "instructions": [
-                "点击生成二维码，ClawX 会在 OpenClaw 中安装并启用官方微信插件",
+                "点击生成二维码，PingClaw 会在 OpenClaw 中安装并启用官方微信插件",
                 "使用微信扫描下方二维码，并在手机上确认连接",
                 "连接成功后，微信里会自动出现新的「微信 ClawBot」对话",
                 "之后可再次通过扫码流程添加更多微信账号，或重新连接已有账号"
@@ -266,7 +268,7 @@
             "instructions": [
                 "您可以在企业微信管理后台创建应用并获取配置信息",
                 "确保已启用接收消息服务器配置",
-                "填写 Bot ID（可选企业 ID 或者直接使用机器人专属 ID）及 Secret 即可建立连接"
+                "填写 Bot ID（可选企业 ID 或直接使用机器人专属 ID）及 Secret 即可建立连接"
             ]
         },
         "imessage": {

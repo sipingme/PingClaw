@@ -14,7 +14,7 @@ import { deleteChannelAccountConfig } from '../../utils/channel-config';
 import { syncAgentModelOverrideToRuntime, syncAllProviderAuthToRuntime } from '../../services/providers/provider-runtime-sync';
 import type { HostApiContext } from '../context';
 import { parseJsonBody, sendJson } from '../route-utils';
-import { ensureClawXContext } from '../../utils/openclaw-workspace';
+import { ensurePingClawContext } from '../../utils/openclaw-workspace';
 
 function scheduleGatewayReload(ctx: HostApiContext, reason: string): void {
   if (ctx.gatewayManager.getStatus().state !== 'stopped') {
@@ -68,7 +68,7 @@ export async function restartGatewayForAgentDeletion(ctx: HostApiContext): Promi
       // a previous pnpm dev run), forcefully kill whatever is on the port.
       try {
         if (process.platform === 'darwin' || process.platform === 'linux') {
-          // MUST use -sTCP:LISTEN. Otherwise lsof returns the client process (ClawX itself) 
+          // MUST use -sTCP:LISTEN. Otherwise lsof returns the client process (PingClaw itself) 
           // that has an ESTABLISHED WebSocket connection to the port, causing us to kill ourselves.
           const { stdout } = await execAsync(`lsof -t -i :${port} -sTCP:LISTEN`);
           const pids = stdout.trim().split('\n').filter(Boolean);
@@ -129,10 +129,10 @@ export async function handleAgentRoutes(
         console.warn('[agents] Failed to sync provider auth after agent creation:', err);
       });
       scheduleGatewayReload(ctx, 'create-agent');
-      // Ensure newly provisioned workspaces get ClawX context merge/cleanup
+      // Ensure newly provisioned workspaces get PingClaw context merge/cleanup
       // even when gateway status events do not fire (e.g. in-process reload).
-      void ensureClawXContext({ waitForAllConfiguredWorkspaces: true }).catch((err) => {
-        console.warn('[agents] Failed to ensure ClawX context after agent creation:', err);
+      void ensurePingClawContext({ waitForAllConfiguredWorkspaces: true }).catch((err) => {
+        console.warn('[agents] Failed to ensure PingClaw context after agent creation:', err);
       });
       sendJson(res, 200, { success: true, ...snapshot });
     } catch (error) {

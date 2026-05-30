@@ -18,6 +18,7 @@
  */
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { SELECTABLE_ACTIVE } from '@/lib/ui-patterns';
 import { Eye, FileEdit, FolderOpen, FolderTree, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -63,7 +64,7 @@ export function ArtifactPanel({ files, agent, runStartedAt, refreshSignal }: Art
 
   return (
     <div data-testid="artifact-panel" className={cn('flex h-full min-h-0 flex-col bg-background', isMac && 'no-drag')}>
-      <div className="relative z-30 flex shrink-0 items-center justify-between gap-2 border-b border-black/5 bg-background px-3 py-2 dark:border-white/10">
+      <div className="relative z-30 flex shrink-0 items-center justify-between gap-2 border-b border-border/60 bg-background px-3 py-2">
         {isMac && (
           <div
             data-testid="artifact-panel-drag-region"
@@ -176,8 +177,8 @@ function PanelTabButton({ testId, icon, label, active, onClick }: PanelTabButton
       className={cn(
         'relative z-40 flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
         active
-          ? 'bg-foreground/10 text-foreground'
-          : 'text-muted-foreground hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10',
+          ? SELECTABLE_ACTIVE
+          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
       )}
     >
       {icon}

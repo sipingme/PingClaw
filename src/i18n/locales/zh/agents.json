@@ -1,17 +1,22 @@
 {
     "title": "Agents",
-    "subtitle": "创建新的 Agent，可以将特定频道路由到不同的人格配置或工作区。",
+    "subtitle": "创建新的 Agent，可以将特定频道路由到不同的人格配置或工作区",
     "refresh": "刷新",
     "addAgent": "添加 Agent",
     "gatewayWarning": "Gateway 服务未运行。Agent 或频道变更可能需要一点时间生效。",
     "defaultBadge": "默认",
     "inherited": "继承",
     "none": "无",
+    "card": {
+        "noChannels": "未绑定频道"
+    },
     "modelLine": "Model: {{model}}{{suffix}}",
     "channelsLine": "频道: {{channels}}",
     "deleteAgent": "删除 Agent",
     "settings": "设置",
     "creating": "创建中...",
+    "emptyTitle": "暂无 Agent",
+    "emptyDescription": "创建 Agent 以绑定模型和频道账号",
     "createDialog": {
         "title": "添加 Agent",
         "description": "输入名称即可创建新 Agent，可选择是否继承主 Agent 的工作区引导文件。",
@@ -22,11 +27,11 @@
     },
     "deleteDialog": {
         "title": "删除 Agent",
-        "message": "确认从 ClawX 删除 “{{name}}”？这会永久删除该 Agent 及其由 ClawX 管理的工作区、运行时和会话文件。"
+        "message": "确认从 PingClaw 删除 “{{name}}”？这会永久删除该 Agent 及其由 PingClaw 管理的工作区、运行时和会话文件。"
     },
     "settingsDialog": {
         "title": "{{name}} 设置",
-        "description": "更新 Agent 名称，并管理哪些频道归属于这个 Agent。",
+        "description": "更新 Agent 名称，并管理哪些频道归属于这个 Agent",
         "nameLabel": "Agent 名称",
         "agentIdLabel": "Agent ID",
         "modelLabel": "Model",
@@ -45,7 +50,7 @@
         "saveModelOverride": "保存模型",
         "useDefaultModel": "使用默认模型",
         "channelsTitle": "频道",
-        "channelsDescription": "该列表为只读。频道账号与绑定关系请在 Channels 页面管理。",
+        "channelsDescription": "该列表为只读，频道账号与绑定关系请在 Channels 页面管理",
         "mainAccount": "主账号",
         "channelsManagedInChannels": "该 Agent 绑定了频道类型，但具体账号绑定请在 Channels 页面查看。",
         "addChannel": "添加频道",

@@ -30,35 +30,9 @@ import zhCron from './locales/zh/cron.json';
 import zhDreams from './locales/zh/dreams.json';
 import zhSetup from './locales/zh/setup.json';
 
-// JA
-import jaCommon from './locales/ja/common.json';
-import jaSettings from './locales/ja/settings.json';
-import jaDashboard from './locales/ja/dashboard.json';
-import jaChat from './locales/ja/chat.json';
-import jaChannels from './locales/ja/channels.json';
-import jaAgents from './locales/ja/agents.json';
-import jaSkills from './locales/ja/skills.json';
-import jaCron from './locales/ja/cron.json';
-import jaDreams from './locales/ja/dreams.json';
-import jaSetup from './locales/ja/setup.json';
-
-// RU
-import ruCommon from './locales/ru/common.json';
-import ruSettings from './locales/ru/settings.json';
-import ruDashboard from './locales/ru/dashboard.json';
-import ruChat from './locales/ru/chat.json';
-import ruChannels from './locales/ru/channels.json';
-import ruAgents from './locales/ru/agents.json';
-import ruSkills from './locales/ru/skills.json';
-import ruCron from './locales/ru/cron.json';
-import ruDreams from './locales/ru/dreams.json';
-import ruSetup from './locales/ru/setup.json';
-
 export const SUPPORTED_LANGUAGES = [
-    { code: 'en', label: 'English' },
     { code: 'zh', label: '中文' },
-    { code: 'ja', label: '日本語' },
-    { code: 'ru', label: 'Русский' },
+    { code: 'en', label: 'English' },
 ] as const satisfies ReadonlyArray<{ code: LanguageCode; label: string }>;
 
 const resources = {
@@ -85,30 +59,6 @@ const resources = {
         cron: zhCron,
         dreams: zhDreams,
         setup: zhSetup,
-    },
-    ja: {
-        common: jaCommon,
-        settings: jaSettings,
-        dashboard: jaDashboard,
-        chat: jaChat,
-        channels: jaChannels,
-        agents: jaAgents,
-        skills: jaSkills,
-        cron: jaCron,
-        dreams: jaDreams,
-        setup: jaSetup,
-    },
-    ru: {
-        common: ruCommon,
-        settings: ruSettings,
-        dashboard: ruDashboard,
-        chat: ruChat,
-        channels: ruChannels,
-        agents: ruAgents,
-        skills: ruSkills,
-        cron: ruCron,
-        dreams: ruDreams,
-        setup: ruSetup,
     },
 };
 

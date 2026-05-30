@@ -22,9 +22,9 @@ import { loadExtensionsFromManifest } from '../extensions/loader';
 import { registerAllBuiltinExtensions } from '../extensions/builtin';
 import { loadExternalMainExtensions } from '../extensions/_ext-bridge.generated';
 import {
-  ensureClawXContext,
-  ensureClawXDefaultIdentity,
-  repairClawXOnlyBootstrapFiles,
+  ensurePingClawContext,
+  ensurePingClawDefaultIdentity,
+  repairPingClawOnlyBootstrapFiles,
 } from '../utils/openclaw-workspace';
 import { autoInstallCliIfNeeded, generateCompletionCache, installCompletionToProfile } from '../utils/openclaw-cli';
 import { isQuitting, setQuitting } from './app-state';
@@ -52,9 +52,11 @@ import { deviceOAuthManager } from '../utils/device-oauth';
 import { browserOAuthManager } from '../utils/browser-oauth';
 import { whatsAppLoginManager } from '../utils/whatsapp-login';
 import { syncAllProviderAuthToRuntime } from '../services/providers/provider-runtime-sync';
+import { createNoopBrowserWindow } from './noop-window';
 
-const WINDOWS_APP_USER_MODEL_ID = 'app.clawx.desktop';
+const WINDOWS_APP_USER_MODEL_ID = 'app.pingclaw.desktop';
 const isE2EMode = process.env.CLAWX_E2E === '1';
+const isWebDevMode = process.env.CLAWX_WEB_DEV === '1';
 const requestedUserDataDir = process.env.CLAWX_USER_DATA_DIR?.trim();
 
 if (isE2EMode && requestedUserDataDir) {
@@ -78,11 +80,11 @@ if (isE2EMode && requestedUserDataDir) {
 app.disableHardwareAcceleration();
 
 // On Linux, set CHROME_DESKTOP so Chromium can find the correct .desktop file.
-// On Wayland this maps the running window to clawx.desktop (→ icon + app grouping);
+// On Wayland this maps the running window to pingclaw.desktop (→ icon + app grouping);
 // on X11 it supplements the StartupWMClass matching.
 // Must be called before app.whenReady() / before any window is created.
 if (process.platform === 'linux') {
-  app.setDesktopName('clawx.desktop');
+  app.setDesktopName('pingclaw.desktop');
 }
 
 // Prevent multiple instances of the app from running simultaneously.
@@ -92,7 +94,7 @@ if (process.platform === 'linux') {
 // The losing process must exit immediately so it never reaches Gateway startup.
 const gotElectronLock = isE2EMode ? true : app.requestSingleInstanceLock();
 if (!gotElectronLock) {
-  console.info('[ClawX] Another instance already holds the single-instance lock; exiting duplicate process');
+  console.info('[PingClaw] Another instance already holds the single-instance lock; exiting duplicate process');
   app.exit(0);
 }
 let releaseProcessInstanceFileLock: () => void = () => {};
@@ -101,7 +103,7 @@ if (gotElectronLock && !isE2EMode) {
   try {
     const fileLock = acquireProcessInstanceFileLock({
       userDataDir: app.getPath('userData'),
-      lockName: 'clawx',
+      lockName: 'pingclaw',
       force: true, // Electron lock already guarantees exclusivity; force-clean orphan/recycled-PID locks
     });
     gotFileLock = fileLock.acquired;
@@ -113,12 +115,12 @@ if (gotElectronLock && !isE2EMode) {
           ? 'unknown lock format/content'
           : 'unknown owner';
       console.info(
-        `[ClawX] Another instance already holds process lock (${fileLock.lockPath}, ${ownerDescriptor}); exiting duplicate process`,
+        `[PingClaw] Another instance already holds process lock (${fileLock.lockPath}, ${ownerDescriptor}); exiting duplicate process`,
       );
       app.exit(0);
     }
   } catch (error) {
-    console.warn('[ClawX] Failed to acquire process instance file lock; continuing with Electron single-instance lock only', error);
+    console.warn('[PingClaw] Failed to acquire process instance file lock; continuing with Electron single-instance lock only', error);
   }
 }
 const gotTheLock = gotElectronLock && gotFileLock;
@@ -212,9 +214,6 @@ function createWindow(): BrowserWindow {
       rendererUrl.searchParams.set('e2eSkipSetup', '1');
     }
     win.loadURL(rendererUrl.toString());
-    if (!isE2EMode) {
-      win.webContents.openDevTools();
-    }
   } else {
     win.loadFile(join(__dirname, '../../dist/index.html'), {
       query: shouldSkipSetupForE2E
@@ -288,7 +287,7 @@ function createMainWindow(): BrowserWindow {
 async function initialize(): Promise<void> {
   // Initialize logger first
   logger.init();
-  logger.info('=== ClawX Application Starting ===');
+  logger.info('=== PingClaw Application Starting ===');
   logger.debug(
     `Runtime: platform=${process.platform}/${process.arch}, electron=${process.versions.electron}, node=${process.versions.node}, packaged=${app.isPackaged}, pid=${process.pid}, ppid=${process.ppid}`
   );
@@ -310,13 +309,17 @@ async function initialize(): Promise<void> {
   // Set application menu
   createMenu();
 
-  // Create the main window
-  const window = createMainWindow();
+  if (isWebDevMode) {
+    logger.info('Running in web dev mode: desktop window disabled; use the Vite dev server in your browser');
+  } else {
+    const desktopWindow = createMainWindow();
 
-  // Create system tray
-  if (!isE2EMode) {
-    createTray(window);
+    if (!isE2EMode) {
+      createTray(desktopWindow);
+    }
   }
+
+  const window = mainWindow ?? createNoopBrowserWindow();
 
   // Override security headers ONLY for the OpenClaw Gateway Control UI.
   // The URL filter ensures this callback only fires for gateway requests,
@@ -365,24 +368,26 @@ async function initialize(): Promise<void> {
   }
 
   // Register update handlers
-  registerUpdateHandlers(appUpdater, window);
+  if (!isWebDevMode) {
+    registerUpdateHandlers(appUpdater, window);
+  }
 
   // Note: Auto-check for updates is driven by the renderer (update store init)
   // so it respects the user's "Auto-check for updates" setting.
 
   // Seed a stable default IDENTITY.md before the Gateway initializes the
-  // workspace so ClawX desktop sessions skip OpenClaw's chat-first bootstrap.
+  // workspace so PingClaw desktop sessions skip OpenClaw's chat-first bootstrap.
   if (!isE2EMode) {
-    void ensureClawXDefaultIdentity().catch((error) => {
-      logger.warn('Failed to seed default ClawX identity:', error);
+    void ensurePingClawDefaultIdentity().catch((error) => {
+      logger.warn('Failed to seed default PingClaw identity:', error);
     });
   }
 
-  // Repair any bootstrap files that only contain ClawX markers (no OpenClaw
-  // template content). This fixes a race condition where ensureClawXContext()
+  // Repair any bootstrap files that only contain PingClaw markers (no OpenClaw
+  // template content). This fixes a race condition where ensurePingClawContext()
   // previously created the file before the gateway could seed the full template.
   if (!isE2EMode) {
-    void repairClawXOnlyBootstrapFiles().catch((error) => {
+    void repairPingClawOnlyBootstrapFiles().catch((error) => {
       logger.warn('Failed to repair bootstrap files:', error);
     });
   }
@@ -414,8 +419,8 @@ async function initialize(): Promise<void> {
   gatewayManager.on('status', (status: { state: string }) => {
     hostEventBus.emit('gateway:status', status);
     if (status.state === 'running' && !isE2EMode) {
-      void ensureClawXContext().catch((error) => {
-        logger.warn('Failed to re-merge ClawX context after gateway reconnect:', error);
+      void ensurePingClawContext().catch((error) => {
+        logger.warn('Failed to re-merge PingClaw context after gateway reconnect:', error);
       });
     }
   });
@@ -510,12 +515,12 @@ async function initialize(): Promise<void> {
     logger.info('Gateway auto-start disabled in settings');
   }
 
-  // Merge ClawX context snippets into the workspace bootstrap files.
+  // Merge PingClaw context snippets into the workspace bootstrap files.
   // The gateway seeds workspace files asynchronously after its HTTP server
-  // is ready, so ensureClawXContext will retry until the target files appear.
+  // is ready, so ensurePingClawContext will retry until the target files appear.
   if (!isE2EMode) {
-    void ensureClawXContext().catch((error) => {
-      logger.warn('Failed to merge ClawX context into workspace:', error);
+    void ensurePingClawContext().catch((error) => {
+      logger.warn('Failed to merge PingClaw context into workspace:', error);
     });
   }
 
@@ -566,7 +571,7 @@ if (gotTheLock) {
 
   // When a second instance is launched, focus the existing window instead.
   app.on('second-instance', () => {
-    logger.info('Second ClawX instance detected; redirecting to the existing window');
+    logger.info('Second PingClaw instance detected; redirecting to the existing window');
 
     const focusRequest = requestSecondInstanceFocus(
       mainWindowFocusState,
@@ -590,6 +595,9 @@ if (gotTheLock) {
     // Register activate handler AFTER app is ready to prevent
     // "Cannot create BrowserWindow before app is ready" on macOS.
     app.on('activate', () => {
+      if (isWebDevMode) {
+        return;
+      }
       if (BrowserWindow.getAllWindows().length === 0) {
         createMainWindow();
       } else {
@@ -599,7 +607,7 @@ if (gotTheLock) {
   });
 
   app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin' || isE2EMode) {
+    if (isWebDevMode || process.platform !== 'darwin' || isE2EMode) {
       app.quit();
     }
   });

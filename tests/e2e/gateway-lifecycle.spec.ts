@@ -9,7 +9,7 @@ function stableStringify(value: unknown): string {
   return `{${entries.join(',')}}`;
 }
 
-test.describe('ClawX gateway lifecycle resilience', () => {
+test.describe('PingClaw gateway lifecycle resilience', () => {
   test('app remains fully navigable while gateway is disconnected', async ({ page }) => {
     // In E2E mode, gateway auto-start is skipped, so the app starts
     // with gateway in "stopped" state — simulating the disconnected scenario.

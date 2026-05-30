@@ -3,7 +3,7 @@ id: openai-api-key-pin-pi-agent-runtime
 title: Pin the embedded "pi" agent runtime on OpenAI API-key provider entries to avoid the unbundled "codex" harness
 scenario: gateway-backend-communication
 taskType: runtime-bridge
-intent: Stop OpenClaw from auto-routing API-key OpenAI provider entries (api.openai.com baseUrl) to the externally-bundled "codex" agent harness, which is not registered in the shipped OpenClaw distribution and causes every chat to fail with `Requested agent harness "codex" is not registered.`. Pin `agentRuntime.id = "pi"` on every `models.providers.openai` entry ClawX writes, and self-heal existing on-disk entries before the next default-provider switch so upgrading users do not have to re-save their provider manually.
+intent: Stop OpenClaw from auto-routing API-key OpenAI provider entries (api.openai.com baseUrl) to the externally-bundled "codex" agent harness, which is not registered in the shipped OpenClaw distribution and causes every chat to fail with `Requested agent harness "codex" is not registered.`. Pin `agentRuntime.id = "pi"` on every `models.providers.openai` entry PingClaw writes, and self-heal existing on-disk entries before the next default-provider switch so upgrading users do not have to re-save their provider manually.
 touchedAreas:
   - harness/specs/tasks/openai-api-key-pin-pi-agent-runtime.md
   - electron/utils/openclaw-auth.ts
@@ -11,7 +11,7 @@ touchedAreas:
   - tests/unit/openclaw-auth.test.ts
 expectedUserBehavior:
   - Configuring OpenAI with an API key (default `https://api.openai.com/v1` baseUrl) and starting a chat succeeds without `Requested agent harness "codex" is not registered.` from the Gateway.
-  - Upgrading from an earlier ClawX build that wrote an `openai` provider entry without `agentRuntime` and then switching default provider (or back to OpenAI) self-heals the entry so the next Gateway reload boots cleanly.
+  - Upgrading from an earlier PingClaw build that wrote an `openai` provider entry without `agentRuntime` and then switching default provider (or back to OpenAI) self-heals the entry so the next Gateway reload boots cleanly.
   - OAuth-based OpenAI Codex accounts (which target the separate `openai-codex` runtime key) keep their existing routing — their `models.providers.openai-codex` entry is never auto-pinned.
 requiredProfiles:
   - fast
@@ -60,7 +60,7 @@ Requested agent harness "codex" is not registered.
 Provider-side validation passes (the API key is valid; the protocol is in the
 allow-list); the failure is purely about agent harness selection.
 
-The fix is to make ClawX write an explicit `agentRuntime: { id: "pi" }` on
+The fix is to make PingClaw write an explicit `agentRuntime: { id: "pi" }` on
 every `models.providers.openai` entry. OpenClaw's policy resolver honours an
 explicit `agentRuntime.id` before falling into the codex auto-routing
 heuristic, so the API-key path is rescued from the unbundled harness without

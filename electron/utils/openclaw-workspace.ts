@@ -11,8 +11,8 @@ import { homedir } from 'os';
 import { logger } from './logger';
 import { getResourcesDir } from './paths';
 
-const CLAWX_BEGIN = '<!-- clawx:begin -->';
-const CLAWX_END = '<!-- clawx:end -->';
+const CLAWX_BEGIN = '<!-- pingclaw:begin -->';
+const CLAWX_END = '<!-- pingclaw:end -->';
 const DEFAULT_BOOTSTRAP_FILENAME = 'BOOTSTRAP.md';
 const DEFAULT_IDENTITY_FILENAME = 'IDENTITY.md';
 
@@ -28,17 +28,17 @@ function isCurrentOpenClawPath(p: string): boolean {
   return workspaceDir === openclawDir || workspaceDir.startsWith(openclawDir + sep);
 }
 
-export function buildDefaultClawXIdentityContent(): string {
+export function buildDefaultPingClawIdentityContent(): string {
   return [
-    '# IDENTITY.md - ClawX',
+    '# IDENTITY.md - PingClaw',
     '',
-    '- **Name:** ClawX',
+    '- **Name:** PingClaw',
     '- **Creature:** desktop AI assistant',
     '- **Vibe:** concise, capable, and practical',
     '- **Emoji:** 🐾',
     '- **Avatar:**',
     '',
-    'ClawX uses a default desktop identity instead of chat-first bootstrap.',
+    'PingClaw uses a default desktop identity instead of chat-first bootstrap.',
     '',
   ].join('\n');
 }
@@ -64,10 +64,10 @@ async function writeFileIfMissing(path: string, content: string): Promise<boolea
 }
 
 /**
- * Ensure ClawX-managed workspaces have a non-template IDENTITY.md before the
+ * Ensure PingClaw-managed workspaces have a non-template IDENTITY.md before the
  * Gateway initializes them. Existing custom identities are preserved.
  */
-export async function ensureClawXIdentityFile(
+export async function ensurePingClawIdentityFile(
   workspaceDir: string,
   options: { createDir?: boolean } = {},
 ): Promise<void> {
@@ -79,7 +79,7 @@ export async function ensureClawXIdentityFile(
   }
 
   const identityPath = join(resolvedWorkspaceDir, DEFAULT_IDENTITY_FILENAME);
-  const defaultIdentity = buildDefaultClawXIdentityContent();
+  const defaultIdentity = buildDefaultPingClawIdentityContent();
   let wroteIdentity = await writeFileIfMissing(identityPath, defaultIdentity);
 
   if (!wroteIdentity) {
@@ -100,30 +100,30 @@ export async function ensureClawXIdentityFile(
   if (await fileExists(bootstrapPath)) {
     try {
       await unlink(bootstrapPath);
-      logger.info(`Removed chat-first bootstrap file from ClawX workspace (${resolvedWorkspaceDir})`);
+      logger.info(`Removed chat-first bootstrap file from PingClaw workspace (${resolvedWorkspaceDir})`);
     } catch {
       logger.warn(`Failed to remove chat-first bootstrap file: ${bootstrapPath}`);
     }
   } else if (wroteIdentity) {
-    logger.info(`Seeded default ClawX identity for workspace (${resolvedWorkspaceDir})`);
+    logger.info(`Seeded default PingClaw identity for workspace (${resolvedWorkspaceDir})`);
   }
 }
 
-export async function ensureClawXDefaultIdentity(): Promise<void> {
+export async function ensurePingClawDefaultIdentity(): Promise<void> {
   const workspaceDirs = await resolveAllWorkspaceDirs();
   for (const { dir: workspaceDir, waitForGatewaySeed } of workspaceDirs) {
-    await ensureClawXIdentityFile(workspaceDir, { createDir: waitForGatewaySeed });
+    await ensurePingClawIdentityFile(workspaceDir, { createDir: waitForGatewaySeed });
   }
 }
 
 // ── Pure helpers (no I/O) ────────────────────────────────────────
 
 /**
- * Merge a ClawX context section into an existing file's content.
+ * Merge a PingClaw context section into an existing file's content.
  * If markers already exist, replaces the section in-place.
  * Otherwise appends it at the end.
  */
-export function mergeClawXSection(existing: string, section: string): string {
+export function mergePingClawSection(existing: string, section: string): string {
   const wrapped = `${CLAWX_BEGIN}\n${section.trim()}\n${CLAWX_END}`;
   const beginIdx = existing.indexOf(CLAWX_BEGIN);
   const endIdx = existing.indexOf(CLAWX_END);
@@ -136,7 +136,7 @@ export function mergeClawXSection(existing: string, section: string): string {
 /**
  * Strip the "## First Run" section from workspace AGENTS.md content.
  * This section is seeded by the OpenClaw Gateway but is unnecessary
- * for ClawX-managed workspaces.  Removes everything from the heading
+ * for PingClaw-managed workspaces.  Removes everything from the heading
  * line until the next markdown heading (any level) or end of content.
  */
 export function stripFirstRunSection(content: string): string {
@@ -263,10 +263,10 @@ async function resolveAllWorkspaceDirs(): Promise<WorkspaceDir[]> {
 // ── Bootstrap file repair ────────────────────────────────────────
 
 /**
- * Detect and remove bootstrap .md files that contain only ClawX markers
+ * Detect and remove bootstrap .md files that contain only PingClaw markers
  * with no meaningful OpenClaw content outside them.
  */
-export async function repairClawXOnlyBootstrapFiles(): Promise<void> {
+export async function repairPingClawOnlyBootstrapFiles(): Promise<void> {
   const workspaceDirs = await resolveAllWorkspaceDirs();
   for (const { dir: workspaceDir } of workspaceDirs) {
     if (!(await fileExists(workspaceDir))) continue;
@@ -295,9 +295,9 @@ export async function repairClawXOnlyBootstrapFiles(): Promise<void> {
       if (before === '' && after === '') {
         try {
           await unlink(filePath);
-          logger.info(`Removed ClawX-only bootstrap file for re-seeding: ${file} (${workspaceDir})`);
+          logger.info(`Removed PingClaw-only bootstrap file for re-seeding: ${file} (${workspaceDir})`);
         } catch {
-          logger.warn(`Failed to remove ClawX-only bootstrap file: ${filePath}`);
+          logger.warn(`Failed to remove PingClaw-only bootstrap file: ${filePath}`);
         }
       }
     }
@@ -307,7 +307,7 @@ export async function repairClawXOnlyBootstrapFiles(): Promise<void> {
 // ── Context merging ──────────────────────────────────────────────
 
 /**
- * Merge ClawX context snippets into workspace bootstrap files that already
+ * Merge PingClaw context snippets into workspace bootstrap files that already
  * exist on disk. Missing files are only retryable for startup-owned workspaces.
  */
 type MergeResult = {
@@ -315,7 +315,7 @@ type MergeResult = {
   retryableMissing: number;
 };
 
-type EnsureClawXContextOptions = {
+type EnsurePingClawContextOptions = {
   /**
    * Startup should only wait for the default workspace. Explicit provisioning
    * flows can opt in so a freshly-created agent workspace gets patched after
@@ -324,16 +324,16 @@ type EnsureClawXContextOptions = {
   waitForAllConfiguredWorkspaces?: boolean;
 };
 
-async function mergeClawXContextOnce(options: EnsureClawXContextOptions = {}): Promise<MergeResult> {
+async function mergePingClawContextOnce(options: EnsurePingClawContextOptions = {}): Promise<MergeResult> {
   const contextDir = join(getResourcesDir(), 'context');
   if (!(await fileExists(contextDir))) {
-    logger.debug('ClawX context directory not found, skipping context merge');
+    logger.debug('PingClaw context directory not found, skipping context merge');
     return { missing: 0, retryableMissing: 0 };
   }
 
   let files: string[];
   try {
-    files = (await readdir(contextDir)).filter((f) => f.endsWith('.clawx.md'));
+    files = (await readdir(contextDir)).filter((f) => f.endsWith('.pingclaw.md'));
   } catch {
     return { missing: 0, retryableMissing: 0 };
   }
@@ -357,7 +357,7 @@ async function mergeClawXContextOnce(options: EnsureClawXContextOptions = {}): P
     }
 
     for (const file of files) {
-      const targetName = file.replace('.clawx.md', '.md');
+      const targetName = file.replace('.pingclaw.md', '.md');
       const targetPath = join(workspaceDir, targetName);
 
       if (!(await fileExists(targetPath))) {
@@ -381,12 +381,12 @@ async function mergeClawXContextOnce(options: EnsureClawXContextOptions = {}): P
         }
       }
 
-      const merged = mergeClawXSection(existing, section);
+      const merged = mergePingClawSection(existing, section);
       // Compare against on-disk content so we persist changes even when only
-      // First Run stripping happened and the ClawX section stayed identical.
+      // First Run stripping happened and the PingClaw section stayed identical.
       if (merged !== originalExisting) {
         await writeFile(targetPath, merged, 'utf-8');
-        logger.info(`Merged ClawX context into ${targetName} (${workspaceDir})`);
+        logger.info(`Merged PingClaw context into ${targetName} (${workspaceDir})`);
       }
     }
   }
@@ -396,47 +396,47 @@ async function mergeClawXContextOnce(options: EnsureClawXContextOptions = {}): P
 
 const RETRY_INTERVAL_MS = 2000;
 const MAX_RETRIES = 5;
-let ensureClawXContextPromise: Promise<void> | null = null;
-let ensureClawXContextWaitsForAll = false;
+let ensurePingClawContextPromise: Promise<void> | null = null;
+let ensurePingClawContextWaitsForAll = false;
 
 /**
- * Ensure ClawX context snippets are merged into the openclaw workspace
+ * Ensure PingClaw context snippets are merged into the openclaw workspace
  * bootstrap files.
  */
-export async function ensureClawXContext(options: EnsureClawXContextOptions = {}): Promise<void> {
-  if (ensureClawXContextPromise) {
-    if (options.waitForAllConfiguredWorkspaces && !ensureClawXContextWaitsForAll) {
-      return ensureClawXContextPromise.then(() => ensureClawXContext(options));
+export async function ensurePingClawContext(options: EnsurePingClawContextOptions = {}): Promise<void> {
+  if (ensurePingClawContextPromise) {
+    if (options.waitForAllConfiguredWorkspaces && !ensurePingClawContextWaitsForAll) {
+      return ensurePingClawContextPromise.then(() => ensurePingClawContext(options));
     }
-    return ensureClawXContextPromise;
+    return ensurePingClawContextPromise;
   }
 
-  ensureClawXContextWaitsForAll = options.waitForAllConfiguredWorkspaces === true;
-  ensureClawXContextPromise = runEnsureClawXContext(options).finally(() => {
-    ensureClawXContextPromise = null;
-    ensureClawXContextWaitsForAll = false;
+  ensurePingClawContextWaitsForAll = options.waitForAllConfiguredWorkspaces === true;
+  ensurePingClawContextPromise = runEnsurePingClawContext(options).finally(() => {
+    ensurePingClawContextPromise = null;
+    ensurePingClawContextWaitsForAll = false;
   });
-  return ensureClawXContextPromise;
+  return ensurePingClawContextPromise;
 }
 
-async function runEnsureClawXContext(options: EnsureClawXContextOptions): Promise<void> {
-  let result = await mergeClawXContextOnce(options);
+async function runEnsurePingClawContext(options: EnsurePingClawContextOptions): Promise<void> {
+  let result = await mergePingClawContextOnce(options);
   if (result.retryableMissing === 0) {
     if (result.missing > 0) {
-      logger.debug(`ClawX context merge skipped ${result.missing} non-ready file(s)`);
+      logger.debug(`PingClaw context merge skipped ${result.missing} non-ready file(s)`);
     }
     return;
   }
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     await new Promise((r) => setTimeout(r, RETRY_INTERVAL_MS));
-    result = await mergeClawXContextOnce(options);
+    result = await mergePingClawContextOnce(options);
     if (result.retryableMissing === 0) {
-      logger.info(`ClawX context merge completed after ${attempt} retry(ies)`);
+      logger.info(`PingClaw context merge completed after ${attempt} retry(ies)`);
       return;
     }
-    logger.debug(`ClawX context merge: ${result.retryableMissing} startup file(s) still missing (retry ${attempt}/${MAX_RETRIES})`);
+    logger.debug(`PingClaw context merge: ${result.retryableMissing} startup file(s) still missing (retry ${attempt}/${MAX_RETRIES})`);
   }
 
-  logger.warn(`ClawX context merge: ${result.retryableMissing} startup file(s) still missing after ${MAX_RETRIES} retries`);
+  logger.warn(`PingClaw context merge: ${result.retryableMissing} startup file(s) still missing after ${MAX_RETRIES} retries`);
 }

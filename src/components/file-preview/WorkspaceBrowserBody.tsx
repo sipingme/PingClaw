@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { cn } from '@/lib/utils';
+import { SELECTABLE_ACTIVE } from '@/lib/ui-patterns';
 import { invokeIpc, readTextFile, statFile } from '@/lib/api-client';
 import {
   isHtmlPreviewExt,
@@ -344,7 +345,7 @@ export function WorkspaceBrowserBody({
           <p>
             {directOpen
               ? t('filePreview.errors.largeBinaryOpenHint', {
-                defaultValue: 'This file is {{size}}. ClawX does not provide an inline preview for it. You can confirm to open it directly in your system default app.',
+                defaultValue: 'This file is {{size}}. PingClaw does not provide an inline preview for it. You can confirm to open it directly in your system default app.',
                 size: formatFileSize(fileState.size ?? 0) || '> 2MB',
               })
               : t('filePreview.errors.tooLarge', 'File too large; preview disabled')}
@@ -370,7 +371,7 @@ export function WorkspaceBrowserBody({
           <p>
             {directOpen
               ? t('filePreview.errors.largeBinaryOpenHint', {
-                defaultValue: 'This file is {{size}}. ClawX does not provide an inline preview for it. You can confirm to open it directly in your system default app.',
+                defaultValue: 'This file is {{size}}. PingClaw does not provide an inline preview for it. You can confirm to open it directly in your system default app.',
                 size: formatFileSize(fileState.size ?? 0) || '> 2MB',
               })
               : t('filePreview.errors.binary', 'Binary files do not support text preview')}
@@ -415,7 +416,7 @@ export function WorkspaceBrowserBody({
             <p className="max-w-md text-xs leading-relaxed text-muted-foreground">
               {directOpen
                 ? t('filePreview.errors.largeBinaryOpenHint', {
-                  defaultValue: 'This file is {{size}}. ClawX does not provide an inline preview for it. You can confirm to open it directly in your system default app.',
+                  defaultValue: 'This file is {{size}}. PingClaw does not provide an inline preview for it. You can confirm to open it directly in your system default app.',
                   size: formatFileSize(fileState.size ?? 0) || '> 2MB',
                 })
                 : t(
@@ -484,7 +485,7 @@ export function WorkspaceBrowserBody({
             {agent?.name ? <span className="ml-2 font-normal text-foreground/70">· {agent.name}</span> : null}
           </h2>
           {workspace && !compact ? (
-            <code className="hidden truncate rounded bg-black/5 px-2 py-0.5 text-2xs text-muted-foreground dark:bg-white/10 sm:inline">
+            <code className="hidden truncate rounded bg-muted/50 px-2 py-0.5 text-2xs text-muted-foreground sm:inline">
               {workspace}
             </code>
           ) : null}
@@ -602,7 +603,7 @@ function FileTreeNodeRow({ node, depth, expanded, selectedRel, onToggle, onSelec
           onClick={() => onToggle(node.relPath)}
           className={cn(
             'flex w-full items-center gap-1 rounded-md px-2 py-1 text-left text-xs transition-colors',
-            'hover:bg-black/5 dark:hover:bg-white/10',
+            'hover:bg-muted/50',
           )}
           style={{ paddingLeft: indent }}
           title={node.relPath || node.name}
@@ -637,8 +638,8 @@ function FileTreeNodeRow({ node, depth, expanded, selectedRel, onToggle, onSelec
         className={cn(
           'flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-xs transition-colors',
           isSelected
-            ? 'bg-primary/10 text-foreground'
-            : 'hover:bg-black/5 dark:hover:bg-white/10',
+            ? cn(SELECTABLE_ACTIVE, 'text-foreground')
+            : 'hover:bg-muted/50',
         )}
         style={{ paddingLeft: indent + 16 }}
         title={node.relPath || node.name}

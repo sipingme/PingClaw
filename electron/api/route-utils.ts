@@ -12,6 +12,20 @@ const ALLOWED_ORIGINS = new Set([
   `http://localhost:${PORTS.OPENCLAW_GATEWAY}`,
 ]);
 
+function isLocalhostHttpOrigin(origin: string): boolean {
+  try {
+    const parsed = new URL(origin);
+    return parsed.protocol === 'http:'
+      && (parsed.hostname === '127.0.0.1' || parsed.hostname === 'localhost');
+  } catch {
+    return false;
+  }
+}
+
+export function isWebDevModeEnabled(): boolean {
+  return process.env.CLAWX_WEB_DEV === '1';
+}
+
 export async function parseJsonBody<T>(req: IncomingMessage): Promise<T> {
   const chunks: Buffer[] = [];
   for await (const chunk of req) {
@@ -47,7 +61,11 @@ export function setCorsHeaders(res: ServerResponse, origin?: string): void {
   // Only reflect the Origin header back if it is in the allow-list.
   // Omitting the header for unknown origins causes the browser to block
   // the response — this is the intended behavior for untrusted callers.
-  if (origin && ALLOWED_ORIGINS.has(origin)) {
+  const allowed = Boolean(
+    origin
+    && (ALLOWED_ORIGINS.has(origin) || (isWebDevModeEnabled() && isLocalhostHttpOrigin(origin))),
+  );
+  if (origin && allowed) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
   }

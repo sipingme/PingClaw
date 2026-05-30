@@ -17,12 +17,11 @@ import {
   Copy,
   XCircle,
   ChevronDown,
+  ChevronLeft,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import {
   useProviderStore,
   type ProviderAccount,
@@ -48,6 +47,7 @@ import {
   type ProviderListItem,
 } from '@/lib/provider-accounts';
 import { cn } from '@/lib/utils';
+import { ACCENT_ICON_LG, ACCENT_ICON_SM, SELECTABLE_ACTIVE_OUTLINE, segmentButtonClass } from '@/lib/ui-patterns';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { invokeIpc } from '@/lib/api-client';
@@ -55,8 +55,8 @@ import { useSettingsStore } from '@/stores/settings';
 import { hostApiFetch } from '@/lib/host-api';
 import { subscribeHostEvent } from '@/lib/host-events';
 
-const inputClasses = 'h-[44px] rounded-xl font-mono text-meta bg-transparent border-black/10 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:border-blue-500 shadow-sm transition-all text-foreground placeholder:text-foreground/40';
-const labelClasses = 'text-sm text-foreground/80 font-bold';
+const inputClasses = 'h-9 rounded-lg font-mono text-xs bg-surface-input border-border/60 focus-visible:ring-2 focus-visible:ring-primary/30 text-foreground placeholder:text-muted-foreground';
+const labelClasses = 'text-xs font-medium text-foreground/90';
 type ArkMode = 'apikey' | 'codeplan';
 
 function normalizeFallbackProviderIds(ids?: string[]): string[] {
@@ -270,35 +270,42 @@ export function ProvidersSettings() {
   };
 
   return (
-    <div data-testid="providers-settings" className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 data-testid="providers-settings-title" className="text-3xl font-serif text-foreground font-normal tracking-tight">
-          {t('aiProviders.title', 'AI Providers')}
+    <div data-testid="providers-settings" className="space-y-4">
+      <div className="flex items-center justify-between gap-4">
+        <h2 data-testid="providers-settings-title" className="text-sm font-medium text-foreground">
+          {t('aiProviders.title')}
         </h2>
-        <Button data-testid="providers-add-button" onClick={() => setShowAddDialog(true)} className="rounded-full px-5 h-9 shadow-none font-medium text-meta">
-          <Plus className="h-4 w-4 mr-2" />
+        <Button
+          data-testid="providers-add-button"
+          size="sm"
+          onClick={() => setShowAddDialog(true)}
+          className="h-8 border border-transparent px-3 text-xs"
+        >
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
           {t('aiProviders.add')}
         </Button>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12 text-muted-foreground bg-black/5 dark:bg-white/5 rounded-3xl border border-transparent border-dashed">
-          <Loader2 className="h-6 w-6 animate-spin" />
+        <div className="flex items-center justify-center rounded-xl border border-dashed border-border/60 bg-card/30 py-12 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" />
         </div>
       ) : displayProviders.length === 0 ? (
-        <div data-testid="providers-empty-state" className="flex flex-col items-center justify-center py-20 text-muted-foreground bg-black/5 dark:bg-white/5 rounded-3xl border border-transparent border-dashed">
-          <Key className="h-12 w-12 mb-4 opacity-50" />
-          <h3 className="text-sm font-medium mb-1 text-foreground">{t('aiProviders.empty.title')}</h3>
-          <p className="text-meta text-center mb-6 max-w-sm">
+        <div data-testid="providers-empty-state" className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-card/30 px-6 py-16 text-center">
+          <div className={ACCENT_ICON_LG}>
+            <Key className="h-5 w-5 text-primary" />
+          </div>
+          <h3 className="mb-1 text-sm font-medium text-foreground">{t('aiProviders.empty.title')}</h3>
+          <p className="mb-5 max-w-sm text-xs text-muted-foreground">
             {t('aiProviders.empty.desc')}
           </p>
-          <Button onClick={() => setShowAddDialog(true)} className="rounded-full px-6 h-10 bg-brand hover:bg-brand-hover text-white">
-            <Plus className="h-4 w-4 mr-2" />
+          <Button size="sm" className="h-8 px-4 text-xs" onClick={() => setShowAddDialog(true)}>
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
             {t('aiProviders.empty.cta')}
           </Button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {displayProviders.map((item) => (
             <ProviderCard
               key={item.account.id}
@@ -531,42 +538,40 @@ function ProviderCard({
   };
 
   const currentInputClasses = isDefault
-    ? "h-[40px] rounded-xl font-mono text-meta bg-white dark:bg-card border-black/10 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-blue-500/50 shadow-sm"
+    ? cn(inputClasses, 'bg-card')
     : inputClasses;
 
-  const currentLabelClasses = isDefault ? "text-meta text-muted-foreground" : labelClasses;
-  const currentSectionLabelClasses = isDefault ? "text-sm font-bold text-foreground/80" : labelClasses;
+  const currentLabelClasses = isDefault ? 'text-xs text-muted-foreground' : labelClasses;
+  const currentSectionLabelClasses = isDefault ? 'text-xs font-medium text-foreground/90' : labelClasses;
 
   return (
     <div
       data-testid={`provider-card-${account.id}`}
       className={cn(
-        "group flex flex-col p-4 rounded-2xl transition-all relative overflow-hidden hover:bg-black/5 dark:hover:bg-white/5",
-        isDefault
-          ? "bg-black/[0.04] dark:bg-white/[0.06] border border-transparent"
-          : "bg-transparent border border-transparent"
+        'group relative flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card/50 p-4 transition-colors hover:border-primary/30 hover:bg-card/70',
+        isDefault && 'border-primary/20 bg-primary/5',
       )}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="h-[42px] w-[42px] shrink-0 flex items-center justify-center text-foreground border border-black/5 dark:border-white/10 rounded-full bg-black/5 dark:bg-white/5 shadow-sm group-hover:scale-105 transition-transform">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-card/40">
             {getProviderIconUrl(account.vendorId) ? (
-              <img src={getProviderIconUrl(account.vendorId)} alt={typeInfo?.name || account.vendorId} className={cn('h-5 w-5', shouldInvertInDark(account.vendorId) && 'dark:invert')} />
+              <img src={getProviderIconUrl(account.vendorId)} alt={typeInfo?.name || account.vendorId} className={cn('h-4 w-4', shouldInvertInDark(account.vendorId) && 'dark:invert')} />
             ) : (
-              <span className="text-xl">{vendor?.icon || typeInfo?.icon || '⚙️'}</span>
+              <span className="text-base">{vendor?.icon || typeInfo?.icon || '⚙️'}</span>
             )}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm">{account.label}</span>
+              <span className="text-sm font-medium">{account.label}</span>
               {isDefault && (
-                <span className="flex items-center gap-1 font-mono text-2xs font-medium px-2 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.08] border-0 shadow-none text-foreground/70">
+                <span className={cn('flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium', SELECTABLE_ACTIVE_OUTLINE)}>
                   <Check className="h-3 w-3" />
                   {t('aiProviders.card.default')}
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2 mt-0.5 text-meta text-muted-foreground">
+            <div className="mt-0.5 flex items-center gap-2 text-2xs text-muted-foreground">
               <span className="capitalize">{vendor?.name || account.vendorId}</span>
               <span className="w-1 h-1 rounded-full bg-black/20 dark:bg-white/20" />
               <span>{getAuthModeLabel(account.authMode, t)}</span>
@@ -579,7 +584,7 @@ function ProviderCard({
               <span className="w-1 h-1 rounded-full bg-black/20 dark:bg-white/20" />
               <span className="flex items-center gap-1">
                 {hasConfiguredCredentials(account, status) ? (
-                  <><div className="w-1.5 h-1.5 rounded-full bg-green-500" /> {t('aiProviders.card.configured')}</>
+                  <><div className="w-1.5 h-1.5 rounded-full bg-primary" /> {t('aiProviders.card.configured')}</>
                 ) : (
                   <><div className="w-1.5 h-1.5 rounded-full bg-red-500" /> {t('aiProviders.dialog.apiKeyMissing')}</>
                 )}
@@ -602,45 +607,45 @@ function ProviderCard({
         </div>
 
         {!isEditing && (
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
             {!isDefault && (
             <Button
               data-testid={`provider-set-default-${account.id}`}
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-white dark:hover:bg-card shadow-sm"
+              className="h-8 w-8 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10"
                 onClick={onSetDefault}
                 title={t('aiProviders.card.setDefault')}
               >
-                <Check className="h-4 w-4" />
+                <Check className="h-3.5 w-3.5" />
               </Button>
             )}
             <Button
               data-testid={`provider-edit-${account.id}`}
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-white dark:hover:bg-card shadow-sm"
+              className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-card/80"
               onClick={onEdit}
               title={t('aiProviders.card.editKey')}
             >
-              <Edit className="h-4 w-4" />
+              <Edit className="h-3.5 w-3.5" />
             </Button>
             <Button
               data-testid={`provider-delete-${account.id}`}
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-white dark:hover:bg-card shadow-sm"
+              className="h-8 w-8 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"
               onClick={onDelete}
               title={t('aiProviders.card.delete')}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
         )}
       </div>
 
       {isEditing && (
-        <div className="space-y-6 mt-4 pt-4 border-t border-black/5 dark:border-white/5">
+        <div className="mt-4 space-y-4 border-t border-border/60 pt-4">
           {effectiveDocsUrl && (
             <div className="flex justify-end -mt-2 mb-2">
               <a
@@ -733,28 +738,28 @@ function ProviderCard({
               )}
               {account.vendorId === 'custom' && (
                 <div className="space-y-1.5 pt-2">
-                  <Label className={currentLabelClasses}>{t('aiProviders.dialog.protocol', 'Protocol')}</Label>
+                  <Label className={currentLabelClasses}>{t('aiProviders.dialog.protocol')}</Label>
                   <div className="flex gap-2 text-meta">
                     <button
                       type="button"
                       onClick={() => setApiProtocol('openai-completions')}
                       className={cn("flex-1 py-1.5 px-3 rounded-lg border transition-colors", apiProtocol === 'openai-completions' ? "bg-white dark:bg-card border-black/20 dark:border-white/20 shadow-sm font-medium" : "border-transparent bg-black/5 dark:bg-white/5 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10")}
                     >
-                      {t('aiProviders.protocols.openaiCompletions', 'OpenAI Completions')}
+                      {t('aiProviders.protocols.openaiCompletions')}
                     </button>
                     <button
                       type="button"
                       onClick={() => setApiProtocol('openai-responses')}
                       className={cn("flex-1 py-1.5 px-3 rounded-lg border transition-colors", apiProtocol === 'openai-responses' ? "bg-white dark:bg-card border-black/20 dark:border-white/20 shadow-sm font-medium" : "border-transparent bg-black/5 dark:bg-white/5 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10")}
                     >
-                      {t('aiProviders.protocols.openaiResponses', 'OpenAI Responses')}
+                      {t('aiProviders.protocols.openaiResponses')}
                     </button>
                     <button
                       type="button"
                       onClick={() => setApiProtocol('anthropic-messages')}
                       className={cn("flex-1 py-1.5 px-3 rounded-lg border transition-colors", apiProtocol === 'anthropic-messages' ? "bg-white dark:bg-card border-black/20 dark:border-white/20 shadow-sm font-medium" : "border-transparent bg-black/5 dark:bg-white/5 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10")}
                     >
-                      {t('aiProviders.protocols.anthropic', 'Anthropic')}
+                      {t('aiProviders.protocols.anthropic')}
                     </button>
                   </div>
                 </div>
@@ -789,7 +794,7 @@ function ProviderCard({
                     onChange={(e) => setFallbackModelsText(e.target.value)}
                     placeholder={t('aiProviders.dialog.fallbackModelIdsPlaceholder')}
                     className={isDefault
-                      ? "min-h-24 w-full rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-card px-3 py-2 text-meta font-mono outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 shadow-sm"
+                      ? "min-h-24 w-full rounded-xl border border-black/10 dark:border-white/10 bg-surface-input dark:bg-card px-3 py-2 text-meta font-mono outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 shadow-sm"
                       : "min-h-24 w-full rounded-xl border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-meta font-mono outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:border-blue-500 shadow-sm transition-all text-foreground placeholder:text-foreground/40"}
                   />
                   <p className="text-xs text-muted-foreground">
@@ -833,7 +838,7 @@ function ProviderCard({
                 </p>
               </div>
               {hasConfiguredCredentials(account, status) ? (
-                <div className="flex items-center gap-1.5 text-tiny font-medium text-green-600 dark:text-green-500 bg-green-500/10 px-2 py-1 rounded-md">
+                <div className="flex items-center gap-1.5 text-tiny font-medium text-primary bg-primary/10 px-2 py-1 rounded-md">
                   <div className="w-1.5 h-1.5 rounded-full bg-current" />
                   {t('aiProviders.card.configured')}
                 </div>
@@ -902,7 +907,7 @@ function ProviderCard({
                   {validating || saving ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Check className="h-4 w-4 text-green-500" />
+                    <Check className="h-4 w-4 text-primary" />
                   )}
                 </Button>
                 <Button
@@ -937,6 +942,28 @@ function ProviderCard({
         </div>
       )}
     </div>
+  );
+}
+
+const ADD_DIALOG_SECTION = 'space-y-3 rounded-xl border border-border/60 bg-card/30 p-4';
+
+function AddDialogSection({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={ADD_DIALOG_SECTION}>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-xs font-medium text-foreground">{title}</h3>
+        {action}
+      </div>
+      <div className="space-y-3">{children}</div>
+    </section>
   );
 }
 
@@ -1270,31 +1297,101 @@ function AddProviderDialog({
     }
   };
 
+  const resetProviderSelection = () => {
+    setSelectedType(null);
+    setValidationError(null);
+    setBaseUrl('');
+    setModelId('');
+    setUserAgent('');
+    setShowAdvancedConfig(false);
+    setArkMode('apikey');
+    setApiKey('');
+    setOauthFlowing(false);
+    setOauthData(null);
+    setManualCodeInput('');
+    setOauthError(null);
+  };
+
+  const selectedProviderName = selectedType
+    ? (typeInfo?.id === 'custom' ? t('aiProviders.custom') : typeInfo?.name || selectedType)
+    : null;
+  const showDisplayNameField = selectedType === 'custom' || (selectedVendor?.supportsMultipleAccounts ?? false);
+  const showCredentialSection = selectedType && !useOAuthFlow;
+
   return (
-    <div data-testid="add-provider-dialog" className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border-0 shadow-2xl bg-surface-modal overflow-hidden">
-        <CardHeader className="relative pb-2 shrink-0">
-          <CardTitle className="text-2xl font-serif font-normal">{t('aiProviders.dialog.title')}</CardTitle>
-          <CardDescription className="text-sm mt-1 text-foreground/70">
-            {t('aiProviders.dialog.desc')}
-          </CardDescription>
+    <div
+      data-testid="add-provider-dialog"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div
+        className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-border/60 bg-card/95 shadow-xl backdrop-blur-sm"
+        onMouseDown={(event) => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border/60 px-5 py-4">
+          <div className="flex min-w-0 items-start gap-2">
+            {selectedType ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0 rounded-md text-muted-foreground hover:text-foreground"
+                onClick={resetProviderSelection}
+                aria-label={t('aiProviders.dialog.change')}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            ) : null}
+            <div className={ACCENT_ICON_SM}>
+              {selectedType ? (
+                getProviderIconUrl(selectedType) ? (
+                  <img
+                    src={getProviderIconUrl(selectedType)}
+                    alt={selectedProviderName || selectedType}
+                    className={cn('h-4 w-4', shouldInvertInDark(selectedType) && 'dark:invert')}
+                  />
+                ) : (
+                  <span className="text-sm">{typeInfo?.icon || '⚙️'}</span>
+                )
+              ) : (
+                <Key className="h-4 w-4" strokeWidth={2} />
+              )}
+            </div>
+            <div className="min-w-0">
+              <h2 className="truncate text-base font-semibold tracking-tight text-foreground">
+                {selectedProviderName || t('aiProviders.dialog.title')}
+              </h2>
+              {!selectedType && (
+                <p className="mt-0.5 text-2xs text-muted-foreground">
+                  {t('aiProviders.dialog.selectDesc')}
+                </p>
+              )}
+            </div>
+          </div>
           <Button
             data-testid="add-provider-close-button"
             variant="ghost"
             size="icon"
-            className="absolute right-4 top-4 rounded-full h-8 w-8 -mr-2 -mt-2 text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
+            className="h-8 w-8 shrink-0 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground"
             onClick={onClose}
           >
             <X className="h-4 w-4" />
           </Button>
-        </CardHeader>
-        <CardContent className="overflow-y-auto flex-1 p-6">
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
           {!selectedType ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {availableTypes.map((type) => (
                 <button
                   data-testid={`add-provider-type-${type.id}`}
                   key={type.id}
+                  type="button"
                   onClick={() => {
                     setSelectedType(type.id);
                     setName(type.id === 'custom' ? t('aiProviders.custom') : type.name);
@@ -1304,431 +1401,375 @@ function AddProviderDialog({
                     setShowAdvancedConfig(false);
                     setArkMode('apikey');
                   }}
-                  className="p-4 rounded-2xl border border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-center group"
+                  className="group flex items-center gap-3 rounded-xl border border-border/60 bg-card/50 p-3 text-left transition-colors hover:border-primary/30 hover:bg-card/70"
                 >
-                  <div className="h-12 w-12 mx-auto mb-3 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-xl shadow-sm border border-black/5 dark:border-white/5 group-hover:scale-105 transition-transform">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-card/40">
                     {getProviderIconUrl(type.id) ? (
-                      <img src={getProviderIconUrl(type.id)} alt={type.name} className={cn('h-6 w-6', shouldInvertInDark(type.id) && 'dark:invert')} />
+                      <img src={getProviderIconUrl(type.id)} alt={type.name} className={cn('h-4 w-4', shouldInvertInDark(type.id) && 'dark:invert')} />
                     ) : (
-                      <span className="text-2xl">{type.icon}</span>
+                      <span className="text-base">{type.icon}</span>
                     )}
                   </div>
-                  <p className="font-medium text-meta">{type.id === 'custom' ? t('aiProviders.custom') : type.name}</p>
+                  <p className="truncate text-sm font-medium text-foreground">
+                    {type.id === 'custom' ? t('aiProviders.custom') : type.name}
+                  </p>
                 </button>
               ))}
             </div>
           ) : (
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 p-4 rounded-2xl bg-transparent border border-black/5 dark:border-white/5 shadow-sm">
-                <div className="h-10 w-10 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-xl">
-                  {getProviderIconUrl(selectedType!) ? (
-                    <img src={getProviderIconUrl(selectedType!)} alt={typeInfo?.name} className={cn('h-6 w-6', shouldInvertInDark(selectedType!) && 'dark:invert')} />
-                  ) : (
-                    <span className="text-xl">{typeInfo?.icon}</span>
-                  )}
-                </div>
-                <div>
-                  <p className="font-semibold text-sm">{typeInfo?.id === 'custom' ? t('aiProviders.custom') : typeInfo?.name}</p>
-                  <button
-                  onClick={() => {
-                    setSelectedType(null);
-                    setValidationError(null);
-                    setBaseUrl('');
-                    setModelId('');
-                    setUserAgent('');
-                    setShowAdvancedConfig(false);
-                    setArkMode('apikey');
-                  }}
-                  className="text-meta text-blue-500 hover:text-blue-600 font-medium"
-                >
-                    {t('aiProviders.dialog.change')}
+            <div className="space-y-4">
+              {isOAuth && supportsApiKey && !oauthUiHidden && (
+                <div className="inline-flex w-full rounded-lg border border-border/60 bg-card/40 p-0.5">
+                  <button type="button" onClick={() => setAuthMode('oauth')} className={segmentButtonClass(authMode === 'oauth', true)}>
+                    {t('aiProviders.oauth.loginMode')}
                   </button>
-                  {effectiveDocsUrl && (
-                    <>
-                      <span className="mx-2 text-foreground/20">|</span>
-                      <a
-                        href={effectiveDocsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-meta text-blue-500 hover:text-blue-600 font-medium inline-flex items-center gap-1"
-                      >
-                        {t('aiProviders.dialog.customDoc')}
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </>
-                  )}
+                  <button type="button" onClick={() => setAuthMode('apikey')} className={segmentButtonClass(authMode === 'apikey', true)}>
+                    {t('aiProviders.oauth.apikeyMode')}
+                  </button>
                 </div>
-              </div>
+              )}
 
-              <div className="space-y-6 bg-transparent p-0">
-                <div className="space-y-2.5">
-                  <Label htmlFor="name" className={labelClasses}>{t('aiProviders.dialog.displayName')}</Label>
-                  <Input
-                    data-testid="add-provider-name-input"
-                    id="name"
-                    placeholder={typeInfo?.id === 'custom' ? t('aiProviders.custom') : typeInfo?.name}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className={inputClasses}
-                  />
-                </div>
-
-                {/* Auth mode toggle for providers supporting both */}
-                {isOAuth && supportsApiKey && !oauthUiHidden && (
-                  <div className="flex rounded-xl border border-black/10 dark:border-white/10 overflow-hidden text-meta font-medium shadow-sm bg-transparent p-1 gap-1">
-                    <button
-                      onClick={() => setAuthMode('oauth')}
-                      className={cn(
-                        'flex-1 py-2 px-3 rounded-lg transition-colors',
-                        authMode === 'oauth' ? 'bg-black/5 dark:bg-white/10 text-foreground' : 'text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5'
-                      )}
+              {useOAuthFlow ? (
+                <AddDialogSection title={t('aiProviders.oauth.loginMode')}>
+                  {!oauthFlowing ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-9 w-full border border-transparent text-xs"
+                      onClick={handleStartOAuth}
                     >
-                      {t('aiProviders.oauth.loginMode')}
-                    </button>
-                    <button
-                      onClick={() => setAuthMode('apikey')}
-                      className={cn(
-                        'flex-1 py-2 px-3 rounded-lg transition-colors',
-                        authMode === 'apikey' ? 'bg-black/5 dark:bg-white/10 text-foreground' : 'text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5'
-                      )}
-                    >
-                      {t('aiProviders.oauth.apikeyMode')}
-                    </button>
-                  </div>
-                )}
-
-                {/* API Key input — shown for non-OAuth providers or when apikey mode is selected */}
-                {(!isOAuth || (supportsApiKey && authMode === 'apikey')) && (
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="apiKey" className={labelClasses}>{t('aiProviders.dialog.apiKey')}</Label>
-                      {typeInfo?.apiKeyUrl && (
-                        <a
-                          href={typeInfo.apiKeyUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-meta text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1"
-                          tabIndex={-1}
-                        >
-                          {t('aiProviders.oauth.getApiKey')} <ExternalLink className="h-3 w-3" />
-                        </a>
+                      {t('aiProviders.oauth.loginButton')}
+                    </Button>
+                  ) : (
+                    <div className="space-y-3">
+                      {oauthError ? (
+                        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-center">
+                          <p className="text-xs font-medium text-destructive">{t('aiProviders.oauth.authFailed')}</p>
+                          <p className="mt-1 text-2xs text-destructive/80">{oauthError}</p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="mt-3 h-8 border-border/60 px-3 text-xs"
+                            onClick={handleCancelOAuth}
+                          >
+                            {t('aiProviders.oauth.tryAgain')}
+                          </Button>
+                        </div>
+                      ) : !oauthData ? (
+                        <div className="flex items-center justify-center gap-2 py-6 text-xs text-muted-foreground">
+                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                          {t('aiProviders.oauth.requestingCode')}
+                        </div>
+                      ) : oauthData.mode === 'manual' ? (
+                        <div className="space-y-3">
+                          <p className="text-2xs leading-relaxed text-muted-foreground">
+                            {oauthData.message || t('aiProviders.oauth.loginPrompt')}
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-full border-border/60 bg-card/40 text-xs"
+                            onClick={() => invokeIpc('shell:openExternal', oauthData.authorizationUrl)}
+                          >
+                            <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                            {t('aiProviders.oauth.openLoginPage')}
+                          </Button>
+                          <Input
+                            placeholder="Paste callback URL or code"
+                            value={manualCodeInput}
+                            onChange={(e) => setManualCodeInput(e.target.value)}
+                            className={inputClasses}
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="h-8 w-full border border-transparent text-xs"
+                            onClick={handleSubmitManualOAuthCode}
+                            disabled={!manualCodeInput.trim()}
+                          >
+                            Submit Code
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-full text-xs text-muted-foreground"
+                            onClick={handleCancelOAuth}
+                          >
+                            {t('aiProviders.oauth.cancel')}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-card/40 px-3 py-2">
+                            <code className="font-mono text-lg font-semibold tracking-[0.15em] text-foreground">
+                              {oauthData.userCode}
+                            </code>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 shrink-0 rounded-md"
+                              onClick={() => {
+                                navigator.clipboard.writeText(oauthData.userCode);
+                                toast.success(t('aiProviders.oauth.codeCopied'));
+                              }}
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-full border-border/60 bg-card/40 text-xs"
+                            onClick={() => invokeIpc('shell:openExternal', oauthData.verificationUri)}
+                          >
+                            <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                            {t('aiProviders.oauth.openLoginPage')}
+                          </Button>
+                          <div className="flex items-center justify-center gap-2 text-2xs text-muted-foreground">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                            {t('aiProviders.oauth.waitingApproval')}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-full text-xs text-muted-foreground"
+                            onClick={handleCancelOAuth}
+                          >
+                            {t('aiProviders.oauth.cancel')}
+                          </Button>
+                        </div>
                       )}
                     </div>
-                    <div className="relative">
+                  )}
+                </AddDialogSection>
+              ) : null}
+
+              {showCredentialSection ? (
+                <AddDialogSection
+                  title={t('aiProviders.dialog.credentialsSection')}
+                  action={effectiveDocsUrl ? (
+                    <a
+                      href={effectiveDocsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md border border-border/60 bg-card/40 px-2.5 text-2xs text-primary hover:border-primary/30"
+                    >
+                      {t('aiProviders.dialog.customDoc')}
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  ) : undefined}
+                >
+                  {showDisplayNameField && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="name" className={labelClasses}>{t('aiProviders.dialog.displayName')}</Label>
                       <Input
-                        data-testid="add-provider-api-key-input"
-                        id="apiKey"
-                        type={showKey ? 'text' : 'password'}
-                        placeholder={typeInfo?.id === 'ollama' ? t('aiProviders.notRequired') : typeInfo?.placeholder}
-                        value={apiKey}
+                        data-testid="add-provider-name-input"
+                        id="name"
+                        placeholder={typeInfo?.id === 'custom' ? t('aiProviders.custom') : typeInfo?.name}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className={inputClasses}
+                      />
+                    </div>
+                  )}
+
+                  {(!isOAuth || (supportsApiKey && authMode === 'apikey')) && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <Label htmlFor="apiKey" className={labelClasses}>{t('aiProviders.dialog.apiKey')}</Label>
+                        {typeInfo?.apiKeyUrl && (
+                          <a
+                            href={typeInfo.apiKeyUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-2xs text-primary hover:underline"
+                            tabIndex={-1}
+                          >
+                            {t('aiProviders.oauth.getApiKey')}
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <Input
+                          data-testid="add-provider-api-key-input"
+                          id="apiKey"
+                          type={showKey ? 'text' : 'password'}
+                          placeholder={typeInfo?.id === 'ollama' ? t('aiProviders.notRequired') : typeInfo?.placeholder}
+                          value={apiKey}
+                          onChange={(e) => {
+                            setApiKey(e.target.value);
+                            setValidationError(null);
+                          }}
+                          className={inputClasses}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowKey(!showKey)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          {showKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        </button>
+                      </div>
+                      {validationError && (
+                        <p className="text-2xs text-destructive">{validationError}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {typeInfo?.showBaseUrl && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="baseUrl" className={labelClasses}>{t('aiProviders.dialog.baseUrl')}</Label>
+                      <Input
+                        data-testid="add-provider-base-url-input"
+                        id="baseUrl"
+                        placeholder={getProtocolBaseUrlPlaceholder(apiProtocol)}
+                        value={baseUrl}
+                        onChange={(e) => setBaseUrl(e.target.value)}
+                        className={inputClasses}
+                      />
+                    </div>
+                  )}
+
+                  {showModelIdField && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="modelId" className={labelClasses}>{t('aiProviders.dialog.modelId')}</Label>
+                      <Input
+                        data-testid="add-provider-model-id-input"
+                        id="modelId"
+                        placeholder={typeInfo?.modelIdPlaceholder || 'provider/model-id'}
+                        value={modelId}
                         onChange={(e) => {
-                          setApiKey(e.target.value);
+                          setModelId(e.target.value);
                           setValidationError(null);
                         }}
                         className={inputClasses}
                       />
+                    </div>
+                  )}
+
+                  {selectedType === 'ark' && codePlanPreset && (
+                    <div className="space-y-2">
+                      <Label className={labelClasses}>{t('aiProviders.dialog.codePlanPreset')}</Label>
+                      <div className="inline-flex w-full rounded-lg border border-border/60 bg-card/40 p-0.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setArkMode('apikey');
+                            setBaseUrl(typeInfo?.defaultBaseUrl || '');
+                            if (modelId.trim() === codePlanPreset.modelId) {
+                              setModelId(typeInfo?.defaultModelId || '');
+                            }
+                            setValidationError(null);
+                          }}
+                          className={segmentButtonClass(arkMode === 'apikey', true)}
+                        >
+                          {t('aiProviders.authModes.apiKey')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setArkMode('codeplan');
+                            setBaseUrl(codePlanPreset.baseUrl);
+                            setModelId(codePlanPreset.modelId);
+                            setValidationError(null);
+                          }}
+                          className={segmentButtonClass(arkMode === 'codeplan', true)}
+                        >
+                          {t('aiProviders.dialog.codePlanMode')}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedType === 'custom' && (
+                    <div className="space-y-2">
+                      <Label className={labelClasses}>{t('aiProviders.dialog.protocol')}</Label>
+                      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-3">
+                        {([
+                          ['openai-completions', 'aiProviders.protocols.openaiCompletions'],
+                          ['openai-responses', 'aiProviders.protocols.openaiResponses'],
+                          ['anthropic-messages', 'aiProviders.protocols.anthropic'],
+                        ] as const).map(([protocol, labelKey]) => (
+                          <button
+                            key={protocol}
+                            type="button"
+                            onClick={() => setApiProtocol(protocol)}
+                            className={cn(
+                              'rounded-lg border px-2 py-1.5 text-2xs transition-colors',
+                              apiProtocol === protocol
+                                ? SELECTABLE_ACTIVE_OUTLINE
+                                : 'border-border/60 bg-surface-input text-muted-foreground hover:border-primary/25',
+                            )}
+                          >
+                            {t(labelKey)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {showUserAgentInAddDialog && (
+                    <div className="space-y-2">
                       <button
                         type="button"
-                        onClick={() => setShowKey(!showKey)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowAdvancedConfig((value) => !value)}
+                        className="flex w-full items-center justify-between text-xs font-medium text-muted-foreground hover:text-foreground"
                       >
-                        {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        <span>{t('aiProviders.dialog.advancedConfig')}</span>
+                        <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', showAdvancedConfig && 'rotate-180')} />
                       </button>
-                    </div>
-                    {validationError && (
-                      <p className="text-meta text-red-500 font-medium">{validationError}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      {t('aiProviders.dialog.apiKeyStored')}
-                    </p>
-                  </div>
-                )}
-
-                {typeInfo?.showBaseUrl && (
-                  <div className="space-y-2.5">
-                    <Label htmlFor="baseUrl" className={labelClasses}>{t('aiProviders.dialog.baseUrl')}</Label>
-                    <Input
-                      data-testid="add-provider-base-url-input"
-                      id="baseUrl"
-                      placeholder={getProtocolBaseUrlPlaceholder(apiProtocol)}
-                      value={baseUrl}
-                      onChange={(e) => setBaseUrl(e.target.value)}
-                      className={inputClasses}
-                    />
-                  </div>
-                )}
-
-                {showModelIdField && (
-                  <div className="space-y-2.5">
-                    <Label htmlFor="modelId" className={labelClasses}>{t('aiProviders.dialog.modelId')}</Label>
-                    <Input
-                      data-testid="add-provider-model-id-input"
-                      id="modelId"
-                      placeholder={typeInfo?.modelIdPlaceholder || 'provider/model-id'}
-                      value={modelId}
-                      onChange={(e) => {
-                        setModelId(e.target.value);
-                        setValidationError(null);
-                      }}
-                      className={inputClasses}
-                    />
-                  </div>
-                )}
-                {selectedType === 'ark' && codePlanPreset && (
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <Label className={labelClasses}>{t('aiProviders.dialog.codePlanPreset')}</Label>
-                      {typeInfo?.codePlanDocsUrl && (
-                        <a
-                          href={typeInfo.codePlanDocsUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-meta text-blue-500 hover:text-blue-600 font-medium inline-flex items-center gap-1"
-                          tabIndex={-1}
-                        >
-                          {t('aiProviders.dialog.codePlanDoc')}
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
+                      {showAdvancedConfig && (
+                        <div className="space-y-1.5">
+                          <Label htmlFor="userAgent" className={labelClasses}>{t('aiProviders.dialog.userAgent')}</Label>
+                          <Input
+                            id="userAgent"
+                            placeholder={t('aiProviders.dialog.userAgentPlaceholder')}
+                            value={userAgent}
+                            onChange={(e) => setUserAgent(e.target.value)}
+                            className={inputClasses}
+                          />
+                        </div>
                       )}
                     </div>
-                    <div className="flex gap-2 text-meta">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setArkMode('apikey');
-                          setBaseUrl(typeInfo?.defaultBaseUrl || '');
-                          if (modelId.trim() === codePlanPreset.modelId) {
-                            setModelId(typeInfo?.defaultModelId || '');
-                          }
-                          setValidationError(null);
-                        }}
-                        className={cn("flex-1 py-1.5 px-3 rounded-lg border transition-colors", arkMode === 'apikey' ? "bg-white dark:bg-card border-black/20 dark:border-white/20 shadow-sm font-medium" : "border-transparent bg-black/5 dark:bg-white/5 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10")}
-                      >
-                        {t('aiProviders.authModes.apiKey')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setArkMode('codeplan');
-                          setBaseUrl(codePlanPreset.baseUrl);
-                          setModelId(codePlanPreset.modelId);
-                          setValidationError(null);
-                        }}
-                        className={cn("flex-1 py-1.5 px-3 rounded-lg border transition-colors", arkMode === 'codeplan' ? "bg-white dark:bg-card border-black/20 dark:border-white/20 shadow-sm font-medium" : "border-transparent bg-black/5 dark:bg-white/5 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10")}
-                      >
-                        {t('aiProviders.dialog.codePlanMode')}
-                      </button>
-                    </div>
-                    {arkMode === 'codeplan' && (
-                      <p className="text-xs text-muted-foreground">
-                        {t('aiProviders.dialog.codePlanPresetDesc')}
-                      </p>
-                    )}
-                  </div>
-                )}
-                {selectedType === 'custom' && (
-                <div className="space-y-2.5">
-                  <Label className={labelClasses}>{t('aiProviders.dialog.protocol', 'Protocol')}</Label>
-                  <div className="flex gap-2 text-meta">
-                    <button
-                      type="button"
-                        onClick={() => setApiProtocol('openai-completions')}
-                        className={cn("flex-1 py-1.5 px-3 rounded-lg border transition-colors", apiProtocol === 'openai-completions' ? "bg-white dark:bg-card border-black/20 dark:border-white/20 shadow-sm font-medium" : "border-transparent bg-black/5 dark:bg-white/5 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10")}
-                    >
-                      {t('aiProviders.protocols.openaiCompletions', 'OpenAI Completions')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setApiProtocol('openai-responses')}
-                      className={cn("flex-1 py-1.5 px-3 rounded-lg border transition-colors", apiProtocol === 'openai-responses' ? "bg-white dark:bg-card border-black/20 dark:border-white/20 shadow-sm font-medium" : "border-transparent bg-black/5 dark:bg-white/5 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10")}
-                    >
-                      {t('aiProviders.protocols.openaiResponses', 'OpenAI Responses')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setApiProtocol('anthropic-messages')}
-                      className={cn("flex-1 py-1.5 px-3 rounded-lg border transition-colors", apiProtocol === 'anthropic-messages' ? "bg-white dark:bg-card border-black/20 dark:border-white/20 shadow-sm font-medium" : "border-transparent bg-black/5 dark:bg-white/5 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10")}
-                      >
-                        {t('aiProviders.protocols.anthropic', 'Anthropic')}
-                      </button>
-                    </div>
-                  </div>
-                )}
-                {showUserAgentInAddDialog && (
-                  <div className="space-y-2.5">
-                    <button
-                      type="button"
-                      onClick={() => setShowAdvancedConfig((value) => !value)}
-                      className="flex items-center justify-between w-full text-sm font-bold text-foreground/80 hover:text-foreground transition-colors"
-                    >
-                      <span>{t('aiProviders.dialog.advancedConfig')}</span>
-                      <ChevronDown className={cn("h-4 w-4 transition-transform", showAdvancedConfig && "rotate-180")} />
-                    </button>
-                    {showAdvancedConfig && (
-                      <div className="space-y-2.5 pt-1">
-                        <Label htmlFor="userAgent" className={labelClasses}>{t('aiProviders.dialog.userAgent')}</Label>
-                        <Input
-                          id="userAgent"
-                          placeholder={t('aiProviders.dialog.userAgentPlaceholder')}
-                          value={userAgent}
-                          onChange={(e) => setUserAgent(e.target.value)}
-                          className={inputClasses}
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-                {/* Device OAuth Trigger — only shown when in OAuth mode */}
-                {useOAuthFlow && (
-                  <div className="space-y-4 pt-2">
-                    <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-5 text-center">
-                      <p className="text-meta font-medium text-blue-600 dark:text-blue-400 mb-4 block">
-                        {t('aiProviders.oauth.loginPrompt')}
-                      </p>
-                      <Button
-                        onClick={handleStartOAuth}
-                        disabled={oauthFlowing}
-                        className="w-full rounded-full h-[42px] font-semibold bg-brand hover:bg-brand-hover text-white shadow-sm"
-                      >
-                        {oauthFlowing ? (
-                          <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('aiProviders.oauth.waiting')}</>
-                        ) : (
-                          t('aiProviders.oauth.loginButton')
-                        )}
-                      </Button>
-                    </div>
-
-                    {/* OAuth Active State Modal / Inline View */}
-                    {oauthFlowing && (
-                      <div className="mt-4 p-5 border border-black/10 dark:border-white/10 rounded-2xl bg-white dark:bg-card shadow-sm relative overflow-hidden">
-                        {/* Background pulse effect */}
-                        <div className="absolute inset-0 bg-blue-500/5 animate-pulse" />
-
-                        <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-5">
-                          {oauthError ? (
-                            <div className="text-red-500 space-y-3">
-                              <XCircle className="h-10 w-10 mx-auto" />
-                              <p className="font-semibold text-sm">{t('aiProviders.oauth.authFailed')}</p>
-                              <p className="text-meta opacity-80">{oauthError}</p>
-                              <Button variant="outline" size="sm" onClick={handleCancelOAuth} className="mt-2 rounded-full px-6 h-9">
-                                Try Again
-                              </Button>
-                            </div>
-                          ) : !oauthData ? (
-                            <div className="space-y-4 py-6">
-                              <Loader2 className="h-10 w-10 animate-spin text-blue-500 mx-auto" />
-                              <p className="text-meta font-medium text-muted-foreground animate-pulse">{t('aiProviders.oauth.requestingCode')}</p>
-                            </div>
-                          ) : oauthData.mode === 'manual' ? (
-                            <div className="space-y-4 w-full">
-                              <div className="space-y-2">
-                                <h3 className="font-semibold text-base text-foreground">Complete OpenAI Login</h3>
-                                <p className="text-meta text-muted-foreground text-left bg-black/5 dark:bg-white/5 p-4 rounded-xl">
-                                  {oauthData.message || 'Open the authorization page, complete login, then paste the callback URL or code below.'}
-                                </p>
-                              </div>
-
-                              <Button
-                                variant="secondary"
-                                className="w-full rounded-full h-[42px] font-semibold"
-                                onClick={() => invokeIpc('shell:openExternal', oauthData.authorizationUrl)}
-                              >
-                                <ExternalLink className="h-4 w-4 mr-2" />
-                                Open Authorization Page
-                              </Button>
-
-                              <Input
-                                placeholder="Paste callback URL or code"
-                                value={manualCodeInput}
-                                onChange={(e) => setManualCodeInput(e.target.value)}
-                                className={inputClasses}
-                              />
-
-                              <Button
-                                className="w-full rounded-full h-[42px] font-semibold bg-brand hover:bg-brand-hover text-white"
-                                onClick={handleSubmitManualOAuthCode}
-                                disabled={!manualCodeInput.trim()}
-                              >
-                                Submit Code
-                              </Button>
-
-                              <Button variant="ghost" className="w-full rounded-full h-[42px] font-semibold text-muted-foreground" onClick={handleCancelOAuth}>
-                                Cancel
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="space-y-5 w-full">
-                              <div className="space-y-2">
-                                <h3 className="font-semibold text-base text-foreground">{t('aiProviders.oauth.approveLogin')}</h3>
-                                <div className="text-meta text-muted-foreground text-left mt-2 space-y-1.5 bg-black/5 dark:bg-white/5 p-4 rounded-xl">
-                                  <p>1. {t('aiProviders.oauth.step1')}</p>
-                                  <p>2. {t('aiProviders.oauth.step2')}</p>
-                                  <p>3. {t('aiProviders.oauth.step3')}</p>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center justify-center gap-3 p-4 bg-transparent border border-black/5 dark:border-white/5 rounded-xl shadow-inner">
-                                <code className="text-3xl font-mono tracking-[0.2em] font-bold text-foreground">
-                                  {oauthData.userCode}
-                                </code>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-10 w-10 rounded-full hover:bg-black/5 dark:hover:bg-white/10"
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(oauthData.userCode);
-                                    toast.success(t('aiProviders.oauth.codeCopied'));
-                                  }}
-                                >
-                                  <Copy className="h-5 w-5" />
-                                </Button>
-                              </div>
-
-                              <Button
-                                variant="secondary"
-                                className="w-full rounded-full h-[42px] font-semibold"
-                                onClick={() => invokeIpc('shell:openExternal', oauthData.verificationUri)}
-                              >
-                                <ExternalLink className="h-4 w-4 mr-2" />
-                                {t('aiProviders.oauth.openLoginPage')}
-                              </Button>
-
-                              <div className="flex items-center justify-center gap-2 text-meta font-medium text-muted-foreground pt-2">
-                                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-                                <span>{t('aiProviders.oauth.waitingApproval')}</span>
-                              </div>
-
-                              <Button variant="ghost" className="w-full rounded-full h-[42px] font-semibold text-muted-foreground" onClick={handleCancelOAuth}>
-                                Cancel
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <Separator className="bg-black/10 dark:bg-white/10" />
-
-              <div className="flex justify-end gap-3">
-                <Button
-                  data-testid="add-provider-submit-button"
-                  onClick={handleAdd}
-                  className={cn("rounded-full px-8 h-[42px] text-meta font-semibold bg-brand hover:bg-brand-hover text-white shadow-sm", useOAuthFlow && "hidden")}
-                  disabled={!selectedType || saving || (showModelIdField && modelId.trim().length === 0)}
-                >
-                  {saving ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : null}
-                  {t('aiProviders.dialog.add')}
-                </Button>
-              </div>
+                  )}
+                </AddDialogSection>
+              ) : null}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border/60 px-5 py-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 border-border/60 bg-card/40 px-3 text-xs"
+            onClick={onClose}
+          >
+            {t('aiProviders.dialog.cancel')}
+          </Button>
+          {selectedType && !useOAuthFlow && (
+            <Button
+              data-testid="add-provider-submit-button"
+              type="button"
+              size="sm"
+              onClick={handleAdd}
+              className="h-8 border border-transparent px-4 text-xs"
+              disabled={!selectedType || saving || (showModelIdField && modelId.trim().length === 0)}
+            >
+              {saving ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+              {t('aiProviders.dialog.add')}
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

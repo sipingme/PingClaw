@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { RefreshCw, Trash2, AlertCircle, Plus, Copy, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { FormSelect } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useGatewayStore } from '@/stores/gateway';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -65,7 +66,7 @@ interface GatewayDiagnosticSnapshot {
   platform: string;
   gateway: GatewayHealthSummary & Record<string, unknown>;
   channels: ChannelGroupItem[];
-  clawxLogTail: string;
+  pingclawLogTail: string;
   gatewayLogTail: string;
   gatewayErrLogTail: string;
 }
@@ -82,7 +83,7 @@ function isGatewayDiagnosticSnapshot(value: unknown): value is GatewayDiagnostic
     && typeof snapshot.gateway === 'object'
     && snapshot.gateway !== null
     && Array.isArray(snapshot.channels)
-    && typeof snapshot.clawxLogTail === 'string'
+    && typeof snapshot.pingclawLogTail === 'string'
     && typeof snapshot.gatewayLogTail === 'string'
     && typeof snapshot.gatewayErrLogTail === 'string'
   );
@@ -125,6 +126,10 @@ const DEFAULT_GATEWAY_HEALTH: GatewayHealthSummary = {
   reasons: [],
   consecutiveHeartbeatMisses: 0,
 };
+
+const UNASSIGNED_AGENT_VALUE = '__unassigned__';
+const CHANNEL_AGENT_SELECT =
+  'h-8 w-[116px] shrink-0 rounded-lg border-border/60 bg-surface-input text-2xs text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/40';
 
 function isStaleNotRunningHealthForRunningGateway(
   gatewayHealth: GatewayHealthSummary,
@@ -170,6 +175,13 @@ export function Channels() {
     : gatewayHealth;
   const visibleChannelGroups = channelGroups;
   const visibleAgents = agents;
+  const agentSelectOptions = useMemo(
+    () => [
+      { value: UNASSIGNED_AGENT_VALUE, label: t('account.unassigned') },
+      ...visibleAgents.map((agent) => ({ value: agent.id, label: agent.name })),
+    ],
+    [t, visibleAgents],
+  );
   const hasStableValue = visibleChannelGroups.length > 0 || visibleAgents.length > 0;
   const isUsingStableValue = hasStableValue && (loading || Boolean(error));
 
@@ -530,36 +542,33 @@ export function Channels() {
   }
 
   return (
-    <div data-testid="channels-page" className="flex flex-col -m-6 dark:bg-background h-[calc(100vh-2.5rem)] overflow-hidden">
-      <div className="w-full max-w-5xl mx-auto flex flex-col h-full p-10 pt-16">
-        <div className="flex flex-col md:flex-row md:items-start justify-between mb-12 shrink-0 gap-4">
+    <div data-testid="channels-page" className="flex h-[calc(100vh-2.5rem)] flex-col overflow-hidden -m-6">
+      <div className="mx-auto flex h-full w-full max-w-4xl flex-col px-6 py-8">
+        <div className="mb-6 flex shrink-0 items-start justify-between gap-4">
           <div>
-            <h1 className="text-5xl md:text-6xl font-serif text-foreground mb-3 font-normal tracking-tight">
-              {t('title')}
-            </h1>
-            <p className="text-subtitle text-foreground/70 font-medium">
-              {t('subtitle')}
-            </p>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t('title')}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{t('subtitle')}</p>
           </div>
 
-          <div className="flex items-center gap-3 md:mt-2">
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
+              size="sm"
               onClick={handleRefresh}
               disabled={gatewayStatus.state !== 'running'}
-              className="h-9 text-meta font-medium rounded-full px-4 border-black/10 dark:border-white/10 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 shadow-none text-foreground/80 hover:text-foreground transition-colors"
+              className="h-8 border-border/60 bg-card/40 px-3 text-xs"
             >
-              <RefreshCw className={cn('h-3.5 w-3.5 mr-2', isUsingStableValue && 'animate-spin')} />
+              <RefreshCw className={cn('mr-1.5 h-3.5 w-3.5', isUsingStableValue && 'animate-spin')} />
               {t('refresh')}
             </Button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto pr-2 pb-10 min-h-0 -mr-2">
+        <div className="min-h-0 flex-1 overflow-y-auto pb-6">
           {gatewayStatus.state !== 'running' && (
-            <div className="mb-8 p-4 rounded-xl border border-yellow-500/50 bg-yellow-500/10 flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-              <span className="text-yellow-700 dark:text-yellow-400 text-sm font-medium">
+            <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-3 py-2.5">
+              <AlertCircle className="h-4 w-4 shrink-0 text-yellow-500" />
+              <span className="text-xs text-yellow-600 dark:text-yellow-400">
                 {t('gatewayWarning')}
               </span>
             </div>
@@ -569,28 +578,28 @@ export function Channels() {
             <div
               data-testid="channels-health-banner"
               className={cn(
-                'mb-8 rounded-xl border p-4',
+                'mb-4 rounded-xl border px-3 py-2.5',
                 displayedGatewayHealth.state === 'unresponsive'
-                  ? 'border-destructive/50 bg-destructive/10'
-                  : 'border-yellow-500/50 bg-yellow-500/10',
+                  ? 'border-destructive/30 bg-destructive/10'
+                  : 'border-yellow-500/30 bg-yellow-500/10',
               )}
             >
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div className="flex items-start gap-3">
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div className="flex items-start gap-2.5">
                   <AlertCircle
                     className={cn(
-                      'mt-0.5 h-5 w-5 shrink-0',
+                      'mt-0.5 h-4 w-4 shrink-0',
                       displayedGatewayHealth.state === 'unresponsive'
                         ? 'text-destructive'
-                        : 'text-yellow-600 dark:text-yellow-400',
+                        : 'text-yellow-500',
                     )}
                   />
                   <div>
-                    <p className="text-sm font-semibold text-foreground">
+                    <p className="text-xs font-medium text-foreground">
                       {t(`health.state.${displayedGatewayHealth.state}`)}
                     </p>
                     {healthReasonLabel && (
-                      <p className="mt-1 text-sm text-foreground/75">{healthReasonLabel}</p>
+                      <p className="mt-0.5 text-2xs text-muted-foreground">{healthReasonLabel}</p>
                     )}
                   </div>
                 </div>
@@ -599,35 +608,35 @@ export function Channels() {
                     data-testid="channels-restart-gateway"
                     size="sm"
                     variant="outline"
-                    className="h-8 rounded-full text-xs"
+                    className="h-8 border-border/60 bg-card/40 px-3 text-xs"
                     onClick={() => { void handleRestartGateway(); }}
                   >
-                    <RotateCcw className="mr-2 h-3.5 w-3.5" />
+                    <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
                     {t('health.restartGateway')}
                   </Button>
                   <Button
                     data-testid="channels-copy-diagnostics"
                     size="sm"
                     variant="outline"
-                    className="h-8 rounded-full text-xs"
+                    className="h-8 border-border/60 bg-card/40 px-3 text-xs"
                     disabled={diagnosticsLoading}
                     onClick={() => { void handleCopyDiagnostics(); }}
                   >
-                    <Copy className="mr-2 h-3.5 w-3.5" />
+                    <Copy className="mr-1.5 h-3.5 w-3.5" />
                     {t('health.copyDiagnostics')}
                   </Button>
                   <Button
                     data-testid="channels-toggle-diagnostics"
                     size="sm"
                     variant="outline"
-                    className="h-8 rounded-full text-xs"
+                    className="h-8 border-border/60 bg-card/40 px-3 text-xs"
                     disabled={diagnosticsLoading}
                     onClick={() => { void handleToggleDiagnostics(); }}
                   >
                     {showDiagnostics ? (
-                      <ChevronUp className="mr-2 h-3.5 w-3.5" />
+                      <ChevronUp className="mr-1.5 h-3.5 w-3.5" />
                     ) : (
-                      <ChevronDown className="mr-2 h-3.5 w-3.5" />
+                      <ChevronDown className="mr-1.5 h-3.5 w-3.5" />
                     )}
                     {showDiagnostics ? t('health.hideDiagnostics') : t('health.viewDiagnostics')}
                   </Button>
@@ -635,9 +644,9 @@ export function Channels() {
               </div>
 
               {showDiagnostics && diagnosticsText && (
-                <div className="mt-4 rounded-xl border border-black/10 dark:border-white/10 bg-background/80 p-3">
-                  <p className="mb-2 text-xs font-medium text-muted-foreground">{t('health.diagnosticsTitle')}</p>
-                  <pre data-testid="channels-diagnostics" className="max-h-[320px] overflow-auto whitespace-pre-wrap break-all text-tiny text-foreground/85">
+                <div className="mt-3 rounded-lg border border-border/60 bg-background/80 p-3">
+                  <p className="mb-2 text-2xs font-medium text-muted-foreground">{t('health.diagnosticsTitle')}</p>
+                  <pre data-testid="channels-diagnostics" className="max-h-[320px] overflow-auto whitespace-pre-wrap break-all text-2xs text-foreground/85">
                     {diagnosticsText}
                   </pre>
                 </div>
@@ -646,40 +655,40 @@ export function Channels() {
           )}
 
           {error && (
-            <div className="mb-8 p-4 rounded-xl border border-destructive/50 bg-destructive/10 flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-destructive" />
-              <span className="text-destructive text-sm font-medium">
+            <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2.5">
+              <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
+              <span className="text-xs text-destructive">
                 {error}
               </span>
             </div>
           )}
 
           {configuredGroups.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-3xl font-serif text-foreground mb-6 font-normal tracking-tight">
+            <div className="mb-6">
+              <h2 className="mb-3 text-sm font-medium text-foreground">
                 {t('configured')}
               </h2>
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {configuredGroups.map((group) => (
-                  <div key={group.channelType} className="rounded-2xl border border-black/10 dark:border-white/10 p-4 bg-transparent">
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-[40px] w-[40px] shrink-0 flex items-center justify-center text-foreground bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-full shadow-sm">
+                  <div key={group.channelType} className="rounded-xl border border-border/60 bg-card/50 p-4 transition-colors hover:border-primary/30 hover:bg-card/70">
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/50 bg-muted/30">
                           <ChannelLogo type={group.channelType as ChannelType} />
                         </div>
                         <div className="min-w-0">
-                          <h3 className="text-base font-semibold text-foreground truncate">
+                          <h3 className="truncate text-sm font-medium text-foreground">
                             {CHANNEL_NAMES[group.channelType as ChannelType] || group.channelType}
                           </h3>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-2 text-2xs text-muted-foreground">
                             <span>{group.channelType}</span>
-                            <span className="w-1 h-1 rounded-full bg-black/20 dark:bg-white/20" />
+                            <span className="h-1 w-1 rounded-full bg-border" />
                             <span className="flex items-center gap-1">
                               <span
                                 className={cn(
-                                  'inline-block h-1.5 w-1.5 rounded-full shrink-0',
-                                  group.status === 'connected' && 'bg-green-500',
-                                  group.status === 'connecting' && 'bg-sky-500 animate-pulse',
+                                  'inline-block h-1.5 w-1.5 shrink-0 rounded-full',
+                                  group.status === 'connected' && 'bg-primary',
+                                  group.status === 'connecting' && 'animate-pulse bg-sky-500',
                                   group.status === 'degraded' && 'bg-yellow-500',
                                   group.status === 'error' && 'bg-red-500',
                                   group.status === 'disconnected' && 'bg-gray-400',
@@ -695,7 +704,7 @@ export function Channels() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-8 text-xs rounded-full"
+                          className="h-8 border-border/60 bg-card/40 px-3 text-xs"
                           onClick={() => {
                             const shouldUseGeneratedAccountId = !usesPluginManagedQrAccounts(group.channelType);
                             const nextAccountId = shouldUseGeneratedAccountId
@@ -713,17 +722,17 @@ export function Channels() {
                             setShowConfigModal(true);
                           }}
                         >
-                          <Plus className="h-3.5 w-3.5 mr-1" />
+                          <Plus className="mr-1.5 h-3.5 w-3.5" />
                           {t('account.add')}
                         </Button>
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          className="h-7 w-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                           onClick={() => setDeleteTarget({ channelType: group.channelType })}
                           title={t('account.deleteChannel')}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </div>
@@ -735,40 +744,41 @@ export function Channels() {
                             ? t('account.mainAccount')
                             : account.name;
                         return (
-                        <div key={`${group.channelType}-${account.accountId}`} className="rounded-xl bg-black/5 dark:bg-white/5 px-3 py-2">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="min-w-0">
+                        <div key={`${group.channelType}-${account.accountId}`} className="rounded-lg border border-border/50 bg-background/40 px-3 py-2">
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2">
-                                <p className="text-meta font-medium text-foreground truncate">{displayName}</p>
+                                <p className="truncate text-xs font-medium text-foreground">{displayName}</p>
                               </div>
                               {account.lastError && (
-                                <div className="text-xs text-destructive mt-1">{account.lastError}</div>
+                                <div className="mt-1 text-2xs text-destructive">{account.lastError}</div>
                               )}
                               {!account.lastError && account.statusReason && account.status === 'degraded' && (
-                                <div className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                                <div className="mt-1 text-2xs text-yellow-600 dark:text-yellow-400">
                                   {t(`health.reasons.${account.statusReason}`)}
                                 </div>
                               )}
                             </div>
 
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground">{t('account.bindAgentLabel')}</span>
-                              <select
-                                className="h-8 rounded-lg border border-black/10 dark:border-white/10 bg-background px-2 text-xs"
-                                value={account.agentId || ''}
-                                onChange={(event) => {
-                                  void handleBindAgent(group.channelType, account.accountId, event.target.value);
+                            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                              <span className="shrink-0 text-2xs text-muted-foreground">{t('account.bindAgentLabel')}</span>
+                              <FormSelect
+                                size="sm"
+                                value={account.agentId || UNASSIGNED_AGENT_VALUE}
+                                onValueChange={(value) => {
+                                  void handleBindAgent(
+                                    group.channelType,
+                                    account.accountId,
+                                    value === UNASSIGNED_AGENT_VALUE ? '' : value,
+                                  );
                                 }}
-                              >
-                                <option value="">{t('account.unassigned')}</option>
-                                {visibleAgents.map((agent) => (
-                                  <option key={agent.id} value={agent.id}>{agent.name}</option>
-                                ))}
-                              </select>
+                                options={agentSelectOptions}
+                                className={CHANNEL_AGENT_SELECT}
+                              />
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-8 text-xs rounded-full"
+                                className="h-8 border-border/60 bg-card/40 px-3 text-xs"
                                   onClick={() => {
                                     void (async () => {
                                       try {
@@ -795,11 +805,11 @@ export function Channels() {
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                className="h-7 w-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                                 onClick={() => setDeleteTarget({ channelType: group.channelType, accountId: account.accountId })}
                                 title={t('account.delete')}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </div>
                           </div>
@@ -813,12 +823,12 @@ export function Channels() {
             </div>
           )}
 
-          <div className="mb-8">
-            <h2 className="text-3xl font-serif text-foreground mb-6 font-normal tracking-tight">
+          <div>
+            <h2 className="mb-3 text-sm font-medium text-foreground">
               {t('supportedChannels')}
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
               {unsupportedGroups.map((type) => {
                 const meta = CHANNEL_META[type];
                 return (
@@ -833,23 +843,21 @@ export function Channels() {
                       setInitialConfigValuesForModal(undefined);
                       setShowConfigModal(true);
                     }}
-                    className={cn(
-                      'group flex items-start gap-4 p-4 rounded-2xl transition-all text-left border relative overflow-hidden bg-transparent border-transparent hover:bg-black/5 dark:hover:bg-white/5'
-                    )}
+                    className="group flex items-start gap-3 rounded-xl border border-border/60 bg-card/50 p-4 text-left transition-colors hover:border-primary/30 hover:bg-card/70"
                   >
-                    <div className="h-[46px] w-[46px] shrink-0 flex items-center justify-center text-foreground bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-full shadow-sm mb-3">
+                    <div className="mb-0 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/50 bg-muted/30">
                       <ChannelLogo type={type} />
                     </div>
-                    <div className="flex flex-col flex-1 min-w-0 py-0.5 mt-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-base font-semibold text-foreground truncate">{meta.name}</h3>
+                    <div className="mt-0 flex min-w-0 flex-1 flex-col py-0.5">
+                      <div className="mb-0.5 flex items-center gap-2">
+                        <h3 className="truncate text-sm font-medium text-foreground">{meta.name}</h3>
                         {meta.isPlugin && (
-                          <Badge variant="secondary" className="font-mono text-2xs font-medium px-2 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.08] border-0 shadow-none text-foreground/70">
+                          <Badge variant="secondary" className="shrink-0 rounded-full border-0 bg-muted/50 px-2 py-0.5 font-mono text-2xs font-medium text-muted-foreground shadow-none">
                             {t('pluginBadge')}
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2 leading-[1.5]">
+                      <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
                         {t(meta.description.replace('channels:', ''))}
                       </p>
                     </div>
@@ -896,10 +904,10 @@ export function Channels() {
 
       <ConfirmDialog
         open={!!deleteTarget}
-        title={t('common.confirm', 'Confirm')}
+        title={t('common:actions.confirm')}
         message={deleteTarget?.accountId ? t('account.deleteConfirm') : t('deleteConfirm')}
-        confirmLabel={t('common.delete', 'Delete')}
-        cancelLabel={t('common.cancel', 'Cancel')}
+        confirmLabel={t('common:actions.delete')}
+        cancelLabel={t('common:actions.cancel')}
         variant="destructive"
         onConfirm={() => {
           void handleDelete();

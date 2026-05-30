@@ -11,7 +11,7 @@ import { tmpdir } from 'node:os';
 const sendJsonMock = vi.fn();
 const parseJsonBodyMock = vi.fn();
 
-const testRootDir = join(tmpdir(), 'clawx-tests', 'files-routes');
+const testRootDir = join(tmpdir(), 'pingclaw-tests', 'files-routes');
 
 vi.mock('@electron/api/route-utils', () => ({
   parseJsonBody: (...args: unknown[]) => parseJsonBodyMock(...args),

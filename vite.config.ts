@@ -7,7 +7,7 @@ import { existsSync, readFileSync } from 'fs';
 
 function getExtensionPackages(): Set<string> {
   try {
-    const manifestPath = resolve(__dirname, 'clawx-extensions.json');
+    const manifestPath = resolve(__dirname, 'pingclaw-extensions.json');
     if (!existsSync(manifestPath)) return new Set();
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
     const allIds: string[] = [
@@ -52,6 +52,7 @@ export default defineConfig({
         // Main process entry file
         entry: 'electron/main/index.ts',
         onstart(options) {
+          delete process.env.ELECTRON_RUN_AS_NODE;
           options.startup();
         },
         vite: {

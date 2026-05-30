@@ -21,14 +21,14 @@ describe('patch-nsis-extract', () => {
   });
 
   it('replaces CopyFiles-based extractUsing7za with direct 7z extraction', () => {
-    tempDir = mkdtempSync(join(tmpdir(), 'clawx-patch-nsis-'));
+    tempDir = mkdtempSync(join(tmpdir(), 'pingclaw-patch-nsis-'));
     const target = join(tempDir, 'extractAppPackage.nsh');
     writeFileSync(target, `before\n${SAMPLE_MACRO}\nafter`, 'utf8');
 
     expect(patchNsisExtractTemplate(target)).toBe(true);
 
     const result = readFileSync(target, 'utf8');
-    expect(result).toContain('ClawX-patched');
+    expect(result).toContain('PingClaw-patched');
     expect(result).not.toContain('CopyFiles /SILENT');
     expect(patchNsisExtractTemplate(target)).toBe(true);
   });

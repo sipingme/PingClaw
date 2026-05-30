@@ -4,7 +4,7 @@ export const OPENCLAW_PROVIDER_KEY_MINIMAX = 'minimax-portal';
 export const OPENCLAW_PROVIDER_KEY_MOONSHOT = 'moonshot';
 export const OPENCLAW_PROVIDER_KEY_MOONSHOT_GLOBAL = 'moonshot-global';
 export const OPENAI_CODEX_RUNTIME_PROVIDER_KEY = 'openai-codex';
-export const CLAWX_OPENAI_IMAGE_PROVIDER_KEY = 'clawx-openai-image';
+export const CLAWX_OPENAI_IMAGE_PROVIDER_KEY = 'pingclaw-openai-image';
 export const OAUTH_PROVIDER_TYPES = ['minimax-portal', 'minimax-portal-cn'] as const;
 export const OPENCLAW_OAUTH_PLUGIN_PROVIDER_KEYS = [
   OPENCLAW_PROVIDER_KEY_MINIMAX,

@@ -28,7 +28,7 @@ describe('MainLayout platform layout', () => {
 
     const layout = screen.getByTestId('main-layout');
     expect(layout).toHaveClass('flex-col');
-    expect(layout).toHaveClass('bg-surface-sidebar');
+    expect(layout).toHaveClass('bg-background');
     expect(screen.getByTestId('main-content')).not.toHaveClass('border-t');
     expect(screen.queryByTestId('mac-main-drag-region')).not.toBeInTheDocument();
   });

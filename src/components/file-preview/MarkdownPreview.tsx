@@ -50,7 +50,7 @@ export default function MarkdownPreview({ source, className }: MarkdownPreviewPr
   return (
     <div className={cn('prose max-w-none px-6 py-4 text-sm leading-relaxed', className)}>
       {yaml && (
-        <pre className="mb-4 rounded-lg border border-black/5 bg-black/[.03] px-3 py-2 text-2xs leading-relaxed text-foreground/70 dark:border-white/10 dark:bg-white/5">
+        <pre className="mb-4 rounded-lg border border-border bg-surface-input px-3 py-2 text-2xs leading-relaxed text-foreground/70">
           <code className="font-mono">{yaml}</code>
         </pre>
       )}
@@ -94,7 +94,7 @@ export default function MarkdownPreview({ source, className }: MarkdownPreviewPr
             if (isInline) {
               return (
                 <code
-                  className="rounded bg-black/5 px-1.5 py-0.5 font-mono text-[0.9em] text-foreground dark:bg-white/10"
+                  className="rounded border border-primary/18 bg-primary/12 px-1.5 py-0.5 font-mono text-[0.9em] text-foreground"
                   {...props}
                 >
                   {children}
@@ -108,7 +108,7 @@ export default function MarkdownPreview({ source, className }: MarkdownPreviewPr
             );
           },
           pre: ({ children }) => (
-            <pre className="overflow-x-auto rounded-lg bg-black/5 p-3 text-xs leading-relaxed dark:bg-white/10">
+            <pre className="chat-detail-surface overflow-x-auto p-3 text-xs leading-relaxed">
               {children}
             </pre>
           ),

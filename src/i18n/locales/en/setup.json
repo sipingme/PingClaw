@@ -1,12 +1,18 @@
 {
+    "common": {
+        "stepProgress": "Step {{current}} of {{total}}",
+        "currentStep": "Now: {{label}}"
+    },
     "steps": {
         "welcome": {
-            "title": "Welcome to ClawX",
-            "description": "Your AI assistant is ready to be configured"
+            "title": "Getting Started",
+            "description": "See what PingClaw can do and choose your interface language",
+            "label": "Welcome"
         },
         "runtime": {
             "title": "Environment Check",
-            "description": "Verifying system requirements"
+            "description": "Make sure Node.js, OpenClaw, and the Gateway are ready",
+            "label": "Env"
         },
         "provider": {
             "title": "AI Provider",
@@ -17,48 +23,67 @@
             "description": "Connect a messaging platform (optional)"
         },
         "installing": {
-            "title": "Setting Up",
-            "description": "Installing essential components"
+            "title": "Install Components",
+            "description": "Set up Python and essential skills automatically",
+            "label": "Install"
         },
         "complete": {
-            "title": "All Set!",
-            "description": "ClawX is ready to use"
+            "title": "All Set",
+            "description": "Setup is done — you can start chatting",
+            "label": "Done"
         }
     },
     "welcome": {
-        "title": "Welcome to ClawX",
-        "description": "ClawX is a graphical interface for OpenClaw, making it easy to use AI assistants across your favorite messaging platforms.",
+        "title": "Welcome to PingClaw",
+        "tagline": "OpenClaw desktop UI · 4 quick steps",
+        "language": "Choose language",
+        "nextAction": "When ready, click Continue",
+        "nextHint": "Next we'll check your environment — usually takes just a few seconds.",
         "features": {
-            "noCommand": "Zero command-line required",
-            "modernUI": "Modern, beautiful interface",
-            "bundles": "Pre-installed skill bundles",
-            "crossPlatform": "Cross-platform support"
+            "noCommand": "GUI-first — no CLI needed",
+            "modernUI": "Clean, modern chat experience",
+            "bundles": "Essential skills pre-configured",
+            "crossPlatform": "macOS, Windows, and Linux"
         }
     },
     "runtime": {
-        "title": "Checking Environment",
+        "blockedHint": "Some checks haven't passed yet. Fix the issues above or tap Re-check before continuing.",
+        "waitingHint": "First Gateway startup may take 30–60 seconds. Keep the app open…",
+        "gatewayErrorHint": "Gateway failed to start",
+        "gatewayErrorAction": "Try Start manually, or View Logs, then Re-check.",
         "viewLogs": "View Logs",
         "recheck": "Re-check",
-        "nodejs": "Node.js Runtime",
-        "openclaw": "OpenClaw Package",
-        "gateway": "Gateway Service",
-        "startGateway": "Start Gateway",
+        "nodejs": "Node.js",
+        "nodejsHint": "Bundled runtime that powers the backend and skills — no separate install",
+        "openclaw": "OpenClaw core",
+        "openclawHint": "Bundled AI agent engine for chats, tools, and skills",
+        "gateway": "Gateway",
+        "gatewayHint": "Service that connects OpenClaw to models, skills, and messaging channels",
+        "startGateway": "Start manually",
         "status": {
-            "checking": "Checking...",
-            "success": "Node.js is available",
+            "checking": "Checking…",
+            "success": "OK",
             "error": "Failed",
+            "starting": "Starting…",
+            "waitingGateway": "Waiting for Gateway…",
+            "startFailed": "Failed to start",
+            "gatewayTimeout": "Startup timed out — check logs and retry",
             "gatewayRunning": "Running on port {{port}}",
-            "packageReady": "OpenClaw package ready"
+            "packageReady": "Ready{{version}}",
+            "packageNotFound": "Package not found at {{dir}}",
+            "packageNotBuilt": "Package incomplete — build output missing",
+            "checkFailed": "Check failed: {{error}}"
         },
         "issue": {
-            "title": "Environment issue detected",
-            "desc": "Please ensure OpenClaw is properly installed. Check the logs for details."
+            "title": "Environment check failed",
+            "desc": "Try: ① View Logs for details ② Confirm OpenClaw is installed ③ Restart the app and Re-check"
         },
         "logs": {
-            "title": "Application Logs",
-            "openFolder": "Open Log Folder",
+            "title": "Application logs",
+            "openFolder": "Open log folder",
             "close": "Close",
-            "noLogs": "(No logs available yet)"
+            "noLogs": "(No logs yet)",
+            "loadFailed": "(Failed to load logs)"
         }
     },
     "provider": {
@@ -97,34 +122,53 @@
         "configureAnother": "Configure another channel"
     },
     "installing": {
-        "title": "Installing Essential Components",
-        "subtitle": "Setting up the tools needed to power your AI assistant",
+        "subtitle": "Installing Python and essential skills — please keep the app open.",
+        "autoAdvanceHint": "You'll move to the next step automatically when installation finishes.",
+        "skipHint": "Skip if you've already set this up manually; some skills may be unavailable.",
         "progress": "Progress",
         "status": {
             "pending": "Pending",
-            "installing": "Installing...",
-            "installed": "Installed",
+            "installing": "Installing…",
+            "installed": "Done",
             "failed": "Failed"
         },
-        "error": "Setup Error:",
-        "restart": "Try restarting the app",
-        "wait": "This may take a few moments...",
-        "skip": "Skip this step"
+        "error": "Installation failed",
+        "unknownError": "An unknown error occurred during installation",
+        "toastFailed": "Environment setup failed",
+        "toastError": "Installation error",
+        "restart": "Restart the app",
+        "wait": "First install usually takes 1–2 minutes. We'll continue automatically…",
+        "skip": "Skip install"
     },
     "complete": {
-        "title": "Setup Complete!",
-        "subtitle": "ClawX is configured and ready to use. You can now start chatting with your AI assistant.",
-        "provider": "AI Provider",
-        "components": "Components",
-        "gateway": "Gateway",
+        "title": "Setup complete",
+        "subtitle": "Your environment is ready — time to chat.",
+        "provider": "AI model",
+        "components": "Installed components",
+        "componentsFallback": "{{count}} installed",
+        "gateway": "Gateway status",
         "running": "Running",
-        "footer": "You can customize skills and connect channels in Settings"
+        "starting": "Starting",
+        "gatewayStopped": "Not running",
+        "nextStepsTitle": "Recommended next",
+        "nextSteps": [
+            "Click Get Started to open the chat",
+            "Add an API key under Settings → AI Models (required before chatting)",
+            "Enable more skills on the Skills page as needed",
+            "Connect Telegram or other channels (optional)"
+        ]
     },
     "nav": {
-        "next": "Next",
+        "next": "Continue",
         "back": "Back",
         "skipStep": "Skip this step",
-        "skipSetup": "Skip Setup",
+        "skipSetup": "Skip setup",
+        "skipSetupHintTitle": "If you skip setup",
+        "skipSetupHintItems": [
+            "You'll enter the app without runtime checks or component install",
+            "Chat won't work until Gateway is ready and an API key is configured"
+        ],
+        "completeHint": "After entering the app, configure an AI model API key in Settings first.",
         "getStarted": "Get Started"
     },
     "defaultSkills": {
@@ -134,19 +178,19 @@
         },
         "python-env": {
             "name": "Python Environment",
-            "description": "Python runtime for skills"
+            "description": "Runtime required for Python skills"
         },
         "code-assist": {
             "name": "Code Assist",
-            "description": "Code analysis and suggestions"
+            "description": "Read, analyze, and edit code"
         },
         "file-tools": {
             "name": "File Tools",
-            "description": "File operations and management"
+            "description": "Read and manage workspace files"
         },
         "terminal": {
             "name": "Terminal",
-            "description": "Shell command execution"
+            "description": "Run shell commands locally"
         }
     }
 }

@@ -126,9 +126,9 @@ describe('chat store session label summary hydration', () => {
       if (method === 'sessions.list') {
         return {
           sessions: [
-            { key: 'agent:main:session-a', displayName: 'ClawX', updatedAt: 1000 },
-            { key: 'agent:main:session-b', displayName: 'ClawX', updatedAt: 1001 },
-            { key: 'agent:main:main', displayName: 'ClawX', updatedAt: 1002 },
+            { key: 'agent:main:session-a', displayName: 'PingClaw', updatedAt: 1000 },
+            { key: 'agent:main:session-b', displayName: 'PingClaw', updatedAt: 1001 },
+            { key: 'agent:main:main', displayName: 'PingClaw', updatedAt: 1002 },
           ],
         };
       }

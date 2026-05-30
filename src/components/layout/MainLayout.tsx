@@ -17,20 +17,19 @@ export function MainLayout() {
       data-testid="main-layout"
       data-platform={platform}
       className={cn(
-        'flex h-screen overflow-hidden',
-        isWin ? 'bg-surface-sidebar' : 'bg-background',
+        'flex h-screen overflow-hidden bg-background',
         isMac ? 'flex-row' : 'flex-col',
       )}
     >
       <TitleBar />
 
-      <div className="flex min-h-0 flex-1 overflow-hidden bg-surface-sidebar">
+      <div className="flex min-h-0 flex-1 overflow-hidden bg-background">
         <Sidebar />
         <main
           data-testid="main-content"
           className={cn(
-            'relative min-h-0 flex-1 overflow-auto rounded-tl-2xl border-l border-border/60 bg-background p-6',
-            !isWin && 'border-t border-border/60',
+            'relative min-h-0 flex-1 overflow-auto border-l border-border/50 bg-background bg-grid bg-vignette p-6',
+            !isWin && 'border-t border-border/50',
           )}
         >
           {isMac && (

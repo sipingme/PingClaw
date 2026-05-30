@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
 import {
   X,
   Loader2,
@@ -15,14 +15,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useChannelsStore } from '@/stores/channels';
 
 import { hostApiFetch } from '@/lib/host-api';
 import { subscribeHostEvent } from '@/lib/host-events';
 import { cn } from '@/lib/utils';
+import { ACCENT_ICON_SM, SELECTABLE_ACTIVE_OUTLINE, STATUS_SUCCESS } from '@/lib/ui-patterns';
 import {
   CHANNEL_ICONS,
   CHANNEL_NAMES,
@@ -62,10 +61,35 @@ interface ChannelConfigModalProps {
   onChannelSaved?: (channelType: ChannelType) => void | Promise<void>;
 }
 
-const inputClasses = 'h-[44px] rounded-xl font-mono text-meta bg-transparent border-black/10 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:border-blue-500 shadow-sm transition-all text-foreground placeholder:text-foreground/40';
-const labelClasses = 'text-sm text-foreground/80 font-bold';
-const outlineButtonClasses = 'h-9 text-meta font-medium rounded-full px-4 border-black/10 dark:border-white/10 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 shadow-none text-foreground/80 hover:text-foreground';
-const primaryButtonClasses = 'h-9 text-meta font-medium rounded-full px-4 shadow-none';
+const CHANNEL_DIALOG_LABEL = 'text-xs font-medium text-foreground/90';
+const CHANNEL_DIALOG_INPUT =
+  'h-9 rounded-lg border-border/60 bg-surface-input text-xs text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/40';
+const CHANNEL_DIALOG_SECTION = 'space-y-3 rounded-xl border border-border/60 bg-card/30 p-4';
+
+function DialogSection({
+  title,
+  description,
+  action,
+  children,
+}: {
+  title: string;
+  description?: string;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className={CHANNEL_DIALOG_SECTION}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          <h3 className="text-sm font-medium text-foreground">{title}</h3>
+          {description && <p className="text-2xs text-muted-foreground">{description}</p>}
+        </div>
+        {action}
+      </div>
+      <div className="space-y-3">{children}</div>
+    </section>
+  );
+}
 
 export function ChannelConfigModal({
   initialSelectedType = null,
@@ -476,47 +500,58 @@ export function ChannelConfigModal({
     setShowSecrets((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const dialogTitle = selectedType
+    ? isExistingConfig
+      ? t('dialog.updateTitle', { name: CHANNEL_NAMES[selectedType] })
+      : t('dialog.configureTitle', { name: CHANNEL_NAMES[selectedType] })
+    : t('dialog.addTitle');
+  const dialogDescription = selectedType && isExistingConfig
+    ? t('dialog.existingDesc')
+    : meta
+      ? t(meta.description.replace('channels:', ''))
+      : t('dialog.selectDesc');
+
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
           onClose();
         }
       }}
     >
-      <Card
-        className="w-full max-w-3xl max-h-[90vh] flex flex-col rounded-3xl border-0 shadow-2xl bg-surface-modal overflow-hidden"
+      <div
+        className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-border/60 bg-card/95 shadow-xl backdrop-blur-sm"
         onMouseDown={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
       >
-        <CardHeader className="flex flex-row items-start justify-between pb-2 shrink-0">
-          <div>
-            <CardTitle className="text-2xl font-serif font-normal tracking-tight">
-              {selectedType
-                ? isExistingConfig
-                  ? t('dialog.updateTitle', { name: CHANNEL_NAMES[selectedType] })
-                  : t('dialog.configureTitle', { name: CHANNEL_NAMES[selectedType] })
-                : t('dialog.addTitle')}
-            </CardTitle>
-            <CardDescription className="text-sm mt-1 text-foreground/70">
-              {selectedType && isExistingConfig
-                ? t('dialog.existingDesc')
-                : meta ? t(meta.description.replace('channels:', '')) : t('dialog.selectDesc')}
-            </CardDescription>
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border/60 px-5 py-4">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className={ACCENT_ICON_SM}>
+              {selectedType ? (
+                <ChannelLogo type={selectedType} />
+              ) : (
+                <BookOpen className="h-4 w-4" strokeWidth={2} />
+              )}
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-base font-semibold tracking-tight text-foreground">{dialogTitle}</h2>
+              <p className="mt-0.5 text-2xs text-muted-foreground">{dialogDescription}</p>
+            </div>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="rounded-full h-8 w-8 -mr-2 -mt-2 text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
+            className="h-8 w-8 shrink-0 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </Button>
-        </CardHeader>
-        <CardContent className="space-y-6 pt-4 overflow-y-auto flex-1 p-6">
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-4">
           {!selectedType ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {getPrimaryChannels().map((type) => {
                 const channelMeta = CHANNEL_META[type];
                 const isConfigured = configuredTypes.includes(type);
@@ -525,61 +560,55 @@ export function ChannelConfigModal({
                     key={type}
                     onClick={() => setSelectedType(type)}
                     className={cn(
-                      'group flex items-start gap-4 p-4 rounded-2xl transition-all text-left border relative overflow-hidden bg-transparent shadow-sm',
+                      'group flex items-start gap-3 rounded-xl border p-3 text-left transition-colors',
                       isConfigured
-                        ? 'border-green-500/40 bg-green-500/5 dark:bg-green-500/10'
-                        : 'border-black/5 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5'
+                        ? 'border-primary/30 bg-primary/5 hover:border-primary/40 hover:bg-primary/10'
+                        : 'border-border/60 bg-card/50 hover:border-primary/30 hover:bg-card/70',
                     )}
                   >
-                    <div className="h-[46px] w-[46px] shrink-0 flex items-center justify-center text-foreground bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-full shadow-sm">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/50 bg-muted/30">
                       <ChannelLogo type={type} />
                     </div>
-                    <div className="flex flex-col flex-1 min-w-0 py-0.5 mt-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-base font-semibold text-foreground truncate">{channelMeta.name}</p>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-0.5 flex items-center gap-2">
+                        <p className="truncate text-sm font-medium text-foreground">{channelMeta.name}</p>
                         {channelMeta.isPlugin && (
-                          <Badge
-                            variant="secondary"
-                            className="font-mono text-2xs font-medium px-2 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.08] border-0 shadow-none text-foreground/70"
-                          >
+                          <Badge variant="secondary" className="h-5 shrink-0 border-0 bg-muted/50 px-1.5 py-0 text-2xs font-medium shadow-none">
                             {t('pluginBadge')}
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2 leading-[1.5]">
+                      <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
                         {t(channelMeta.description.replace('channels:', ''))}
                       </p>
-                      <p className="text-xs font-medium text-muted-foreground/80 mt-2">
+                      <p className="mt-1 text-2xs text-muted-foreground">
                         {channelMeta.connectionType === 'qr' ? t('dialog.qrCode') : t('dialog.token')}
+                        {isConfigured ? ` · ${t('configuredBadge')}` : ''}
                       </p>
                     </div>
-                    {isConfigured && (
-                      <Badge className="absolute top-3 right-3 text-2xs font-medium rounded-full bg-green-600 hover:bg-green-600">
-                        {t('configuredBadge')}
-                      </Badge>
-                    )}
                   </button>
                 );
               })}
             </div>
           ) : qrCode ? (
-            <div className="text-center space-y-6">
-              <div className="bg-transparent p-4 rounded-3xl inline-block shadow-sm border border-black/10 dark:border-white/10">
+            <div className="space-y-4 text-center">
+              <div className="inline-block rounded-xl border border-border/60 bg-background/40 p-3">
                 {qrCode.startsWith('data:image') || qrCode.startsWith('http://') || qrCode.startsWith('https://') ? (
-                  <img src={qrCode} alt="Scan QR Code" className="w-64 h-64 object-contain rounded-2xl" />
+                  <img src={qrCode} alt="Scan QR Code" className="h-56 w-56 rounded-lg object-contain" />
                 ) : (
-                  <div className="w-64 h-64 bg-white dark:bg-background rounded-2xl flex items-center justify-center">
-                    <QrCode className="h-32 w-32 text-gray-400" />
+                  <div className="flex h-56 w-56 items-center justify-center rounded-lg bg-background">
+                    <QrCode className="h-24 w-24 text-muted-foreground" />
                   </div>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 {t('dialog.scanQR', { name: meta?.name })}
               </p>
-              <div className="flex justify-center gap-2">
+              <div className="flex justify-center">
                 <Button
                   variant="outline"
-                  className={outlineButtonClasses}
+                  size="sm"
+                  className="h-8 border-border/60 bg-card/40 px-3 text-xs"
                   onClick={() => {
                     setQrCode(null);
                     void handleConnect();
@@ -590,131 +619,133 @@ export function ChannelConfigModal({
               </div>
             </div>
           ) : loadingConfig ? (
-            <div className="flex items-center justify-center py-10 rounded-2xl bg-transparent border border-black/10 dark:border-white/10">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-sm text-muted-foreground">{t('dialog.loadingConfig')}</span>
+            <div className="flex items-center justify-center rounded-xl border border-border/60 bg-card/30 py-10">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-xs text-muted-foreground">{t('dialog.loadingConfig')}</span>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {isExistingConfig && (
-                <div className="bg-blue-500/10 text-blue-600 dark:text-blue-400 p-4 rounded-2xl text-sm flex items-center gap-2 border border-blue-500/20">
+                <div className={cn('flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs', SELECTABLE_ACTIVE_OUTLINE)}>
                   <CheckCircle className="h-4 w-4 shrink-0" />
                   <span>{t('dialog.existingHint')}</span>
                 </div>
               )}
 
-              <div className="bg-transparent p-4 rounded-2xl space-y-4 shadow-sm border border-black/10 dark:border-white/10">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className={labelClasses}>{t('dialog.howToConnect')}</p>
-                    <p className="text-meta text-muted-foreground mt-1">
-                      {meta ? t(meta.description.replace('channels:', '')) : ''}
-                    </p>
-                  </div>
+              <DialogSection
+                title={t('dialog.howToConnect')}
+                action={meta?.docsUrl ? (
                   <Button
                     variant="outline"
-                    className={cn(outlineButtonClasses, 'h-8 px-3 shrink-0')}
+                    size="sm"
+                    className="h-7 shrink-0 border-border/60 bg-card/40 px-2.5 text-2xs"
                     onClick={openDocs}
                   >
-                    <BookOpen className="h-3 w-3 mr-1" />
+                    <BookOpen className="mr-1 h-3 w-3" />
                     {t('dialog.viewDocs')}
-                    <ExternalLink className="h-3 w-3 ml-1" />
+                    <ExternalLink className="ml-1 h-3 w-3" />
                   </Button>
-                </div>
-                <ol className="list-decimal pl-5 text-meta text-muted-foreground leading-relaxed space-y-1.5">
+                ) : undefined}
+              >
+                <ol className="list-decimal space-y-1.5 pl-4 text-xs leading-relaxed text-muted-foreground">
                   {meta?.instructions.map((instruction, index) => (
                     <li key={index}>{t(instruction)}</li>
                   ))}
                 </ol>
-              </div>
+              </DialogSection>
 
-              {showChannelName && (
-                <div className="space-y-2.5">
-                  <Label htmlFor="name" className={labelClasses}>{t('dialog.channelName')}</Label>
-                  <Input
-                    ref={firstInputRef}
-                    id="name"
-                    placeholder={t('dialog.channelNamePlaceholder', { name: meta?.name })}
-                    value={channelName}
-                    onChange={(event) => setChannelName(event.target.value)}
-                    className={inputClasses}
-                  />
-                </div>
-              )}
-
-              {showAccountIdEditor && (
-                <div className="space-y-2.5">
-                  <Label htmlFor="account-id" className={labelClasses}>{t('account.customIdLabel')}</Label>
-                  <Input
-                    id="account-id"
-                    value={accountIdInput}
-                    onChange={(event) => {
-                      setAccountIdInput(event.target.value);
-                      if (accountIdError) {
-                        setAccountIdError(null);
-                      }
-                    }}
-                    placeholder={t('account.customIdPlaceholder')}
-                    className={cn(inputClasses, accountIdError && 'border-destructive/50 focus-visible:ring-destructive/30')}
-                  />
-                  {accountIdError ? (
-                    <p className="text-xs text-destructive">{accountIdError}</p>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">{t('account.customIdHint')}</p>
+              {(showChannelName || showAccountIdEditor || (meta?.configFields.length ?? 0) > 0) && (
+                <DialogSection
+                  title={t('dialog.credentialsSection', { defaultValue: '连接凭证' })}
+                  description={t('dialog.credentialsSectionDesc', { defaultValue: '填写频道接入所需的密钥与标识' })}
+                >
+                  {showChannelName && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="name" className={CHANNEL_DIALOG_LABEL}>{t('dialog.channelName')}</Label>
+                      <Input
+                        ref={firstInputRef}
+                        id="name"
+                        placeholder={t('dialog.channelNamePlaceholder', { name: meta?.name })}
+                        value={channelName}
+                        onChange={(event) => setChannelName(event.target.value)}
+                        className={CHANNEL_DIALOG_INPUT}
+                      />
+                    </div>
                   )}
-                </div>
-              )}
 
-              <div className="space-y-4">
-                {meta?.configFields.map((field) => (
-                  <ConfigField
-                    key={field.key}
-                    field={field}
-                    value={configValues[field.key] || ''}
-                    onChange={(value) => updateConfigValue(field.key, value)}
-                    showSecret={showSecrets[field.key] || false}
-                    onToggleSecret={() => toggleSecretVisibility(field.key)}
-                  />
-                ))}
-              </div>
+                  {showAccountIdEditor && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="account-id" className={CHANNEL_DIALOG_LABEL}>{t('account.customIdLabel')}</Label>
+                      <Input
+                        id="account-id"
+                        value={accountIdInput}
+                        onChange={(event) => {
+                          setAccountIdInput(event.target.value);
+                          if (accountIdError) {
+                            setAccountIdError(null);
+                          }
+                        }}
+                        placeholder={t('account.customIdPlaceholder')}
+                        className={cn(CHANNEL_DIALOG_INPUT, accountIdError && 'border-destructive/50 focus-visible:ring-destructive/30')}
+                      />
+                      {accountIdError ? (
+                        <p className="text-2xs text-destructive">{accountIdError}</p>
+                      ) : (
+                        <p className="text-2xs text-muted-foreground">{t('account.customIdHint')}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {meta?.configFields.map((field) => (
+                    <ConfigField
+                      key={field.key}
+                      field={field}
+                      value={configValues[field.key] || ''}
+                      onChange={(value) => updateConfigValue(field.key, value)}
+                      showSecret={showSecrets[field.key] || false}
+                      onToggleSecret={() => toggleSecretVisibility(field.key)}
+                    />
+                  ))}
+                </DialogSection>
+              )}
 
               {validationResult && (
                 <div
                   className={cn(
-                    'p-4 rounded-2xl text-sm border',
+                    'rounded-xl border px-3 py-2.5 text-xs',
                     validationResult.valid
-                      ? 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20'
-                      : 'bg-destructive/10 text-destructive border-destructive/20'
+                      ? STATUS_SUCCESS
+                      : 'border-destructive/30 bg-destructive/10 text-destructive',
                   )}
                 >
                   <div className="flex items-start gap-2">
                     {validationResult.valid ? (
-                      <CheckCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0" />
                     ) : (
-                      <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                     )}
                     <div className="min-w-0">
-                      <h4 className="font-medium mb-1">
+                      <h4 className="font-medium">
                         {validationResult.valid ? t('dialog.credentialsVerified') : t('dialog.validationFailed')}
                       </h4>
                       {validationResult.errors.length > 0 && (
-                        <ul className="list-disc list-inside space-y-0.5">
+                        <ul className="mt-1 list-inside list-disc space-y-0.5 text-2xs">
                           {validationResult.errors.map((err, index) => (
                             <li key={index}>{err}</li>
                           ))}
                         </ul>
                       )}
                       {validationResult.valid && validationResult.warnings.length > 0 && (
-                        <div className="mt-1 text-green-600 dark:text-green-400 space-y-0.5">
+                        <div className="mt-1 space-y-0.5 text-2xs">
                           {validationResult.warnings.map((info, index) => (
-                            <p key={index} className="text-xs">{info}</p>
+                            <p key={index}>{info}</p>
                           ))}
                         </div>
                       )}
                       {!validationResult.valid && validationResult.warnings.length > 0 && (
-                        <div className="mt-2 text-yellow-600 dark:text-yellow-500">
-                          <p className="font-medium text-xs uppercase mb-1">{t('dialog.warnings')}</p>
-                          <ul className="list-disc list-inside space-y-0.5">
+                        <div className="mt-2 text-2xs text-yellow-600 dark:text-yellow-400">
+                          <p className="mb-1 font-medium">{t('dialog.warnings')}</p>
+                          <ul className="list-inside list-disc space-y-0.5">
                             {validationResult.warnings.map((warn, index) => (
                               <li key={index}>{warn}</li>
                             ))}
@@ -725,58 +756,58 @@ export function ChannelConfigModal({
                   </div>
                 </div>
               )}
-
-              <Separator className="bg-black/10 dark:bg-white/10" />
-
-              <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-2">
-                <div className="flex flex-col sm:flex-row gap-2">
-                  {meta?.connectionType === 'token' && shouldUseCredentialValidation && (
-                    <Button
-                      variant="outline"
-                      onClick={handleValidate}
-                      disabled={validating}
-                      className={outlineButtonClasses}
-                    >
-                      {validating ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          {t('dialog.validating')}
-                        </>
-                      ) : (
-                        <>
-                          <ShieldCheck className="h-4 w-4 mr-2" />
-                          {t('dialog.validateConfig')}
-                        </>
-                      )}
-                    </Button>
-                  )}
-                  <Button
-                    onClick={() => {
-                      void handleConnect();
-                    }}
-                    disabled={connecting || !isFormValid() || (showAccountIdEditor && !accountIdInput.trim())}
-                    className={primaryButtonClasses}
-                  >
-                    {connecting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        {meta?.connectionType === 'qr' ? t('dialog.generatingQR') : t('dialog.validatingAndSaving')}
-                      </>
-                    ) : meta?.connectionType === 'qr' ? (
-                      t('dialog.generateQRCode')
-                    ) : (
-                      <>
-                        <Check className="h-4 w-4 mr-2" />
-                        {isExistingConfig ? t('dialog.updateAndReconnect') : t('dialog.saveAndConnect')}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        {selectedType && !qrCode && !loadingConfig && (
+          <div className="flex shrink-0 justify-end gap-2 border-t border-border/60 px-5 py-3">
+            {meta?.connectionType === 'token' && shouldUseCredentialValidation && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleValidate}
+                disabled={validating}
+                className="h-8 border-border/60 bg-card/40 px-3 text-xs"
+              >
+                {validating ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    {t('dialog.validating')}
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
+                    {t('dialog.validateConfig')}
+                  </>
+                )}
+              </Button>
+            )}
+            <Button
+              size="sm"
+              onClick={() => {
+                void handleConnect();
+              }}
+              disabled={connecting || !isFormValid() || (showAccountIdEditor && !accountIdInput.trim())}
+              className="h-8 px-3 text-xs"
+            >
+              {connecting ? (
+                <>
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  {meta?.connectionType === 'qr' ? t('dialog.generatingQR') : t('dialog.validatingAndSaving')}
+                </>
+              ) : meta?.connectionType === 'qr' ? (
+                t('dialog.generateQRCode')
+              ) : (
+                <>
+                  <Check className="mr-1.5 h-3.5 w-3.5" />
+                  {isExistingConfig ? t('dialog.updateAndReconnect') : t('dialog.saveAndConnect')}
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -817,10 +848,10 @@ function ConfigField({ field, value, onChange, showSecret, onToggleSecret }: Con
   const isPassword = field.type === 'password';
 
   return (
-    <div className="space-y-2.5">
-      <Label htmlFor={field.key} className={labelClasses}>
+    <div className="space-y-1.5">
+      <Label htmlFor={field.key} className={CHANNEL_DIALOG_LABEL}>
         {t(field.label)}
-        {field.required && <span className="text-destructive ml-1">*</span>}
+        {field.required && <span className="ml-1 text-destructive">*</span>}
       </Label>
       <div className="flex gap-2">
         <Input
@@ -829,7 +860,7 @@ function ConfigField({ field, value, onChange, showSecret, onToggleSecret }: Con
           placeholder={field.placeholder ? t(field.placeholder) : undefined}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className={inputClasses}
+          className={cn(CHANNEL_DIALOG_INPUT, 'font-mono')}
         />
         {isPassword && (
           <Button
@@ -837,19 +868,19 @@ function ConfigField({ field, value, onChange, showSecret, onToggleSecret }: Con
             variant="outline"
             size="icon"
             onClick={onToggleSecret}
-            className="h-[44px] w-[44px] rounded-xl bg-transparent border-black/10 dark:border-white/10 text-muted-foreground hover:text-foreground shrink-0 shadow-sm"
+            className="h-9 w-9 shrink-0 rounded-lg border-border/60 bg-card/40 text-muted-foreground hover:text-foreground"
           >
-            {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showSecret ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
           </Button>
         )}
       </div>
       {field.description && (
-        <p className="text-meta text-muted-foreground leading-relaxed">
+        <p className="text-2xs leading-relaxed text-muted-foreground">
           {t(field.description)}
         </p>
       )}
       {field.envVar && (
-        <p className="text-xs text-muted-foreground/70 font-mono">
+        <p className="font-mono text-2xs text-muted-foreground/80">
           {t('dialog.envVar', { var: field.envVar })}
         </p>
       )}

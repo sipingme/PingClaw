@@ -34,6 +34,7 @@ import {
 import { isImageGenerationPending } from './image-generation-status';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { ACCENT_ICON_LG, ACCENT_AVATAR } from '@/lib/ui-patterns';
 import { useStickToBottomInstant } from '@/hooks/use-stick-to-bottom-instant';
 import { useMinLoading } from '@/hooks/use-min-loading';
 import { extractGeneratedFiles, generatedFileHasDiffPayload, isHtmlPreviewExt, type GeneratedFile } from '@/lib/generated-files';
@@ -780,7 +781,6 @@ export function Chat() {
 
   const platform = window.electron?.platform;
   const isMac = platform === 'darwin';
-  const isWindows = platform === 'win32';
 
   return (
     <div
@@ -792,8 +792,7 @@ export function Chat() {
         // Stack above MainLayout's mac-main-drag-region (z-10) so the right-hand
         // artifact/preview pane stays clickable; window drag is handled by the
         // sidebar + chat-toolbar drag strips instead.
-        isMac && 'z-20 rounded-tl-2xl shadow-[inset_1px_1px_0_hsl(var(--border)/0.55)]',
-        isWindows && 'rounded-tl-2xl',
+        isMac && 'z-20 shadow-[inset_1px_1px_0_hsl(var(--border)/0.55)]',
       )}
       style={{ height: isMac ? '100vh' : 'calc(100vh - 2.5rem)' }}
     >
@@ -836,11 +835,11 @@ export function Chat() {
                         type="button"
                         onClick={() => void loadMoreHistory()}
                         disabled={loadingMoreHistory}
-                        className="inline-flex items-center gap-2 rounded-full border border-border bg-background/80 px-3 py-1.5 text-xs text-muted-foreground shadow-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border/60 bg-card/40 px-3 text-xs text-muted-foreground transition-colors hover:bg-card/70 disabled:cursor-not-allowed disabled:opacity-60"
                         data-testid="chat-load-more-history"
                       >
                         {loadingMoreHistory && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                        {loadingMoreHistory ? t('loadingMoreHistory', '加载更多中...') : t('loadMoreHistory', '加载更早的消息')}
+                        {loadingMoreHistory ? t('loadingMoreHistory') : t('loadMoreHistory')}
                       </button>
                     </div>
                   )}
@@ -986,7 +985,7 @@ export function Chat() {
             <button
               type="button"
               onClick={() => void scrollToBottom({ animation: 'smooth', ignoreEscapes: true })}
-              className="absolute bottom-4 right-4 z-20 inline-flex items-center gap-2 rounded-full border border-border bg-background/95 px-3 py-1.5 text-xs font-medium text-foreground shadow-lg shadow-black/10 backdrop-blur transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:shadow-black/30"
+              className="absolute bottom-4 right-4 z-20 inline-flex h-8 items-center gap-1.5 rounded-md border border-border/60 bg-card/95 px-3 text-xs font-medium text-foreground shadow-lg backdrop-blur transition-colors hover:bg-card/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               aria-label={t('scrollToLatest', '跳转到最新对话')}
               title={t('scrollToLatest', '跳转到最新对话')}
               data-testid="chat-scroll-to-latest"
@@ -1006,29 +1005,27 @@ export function Chat() {
       {/* Run error callout */}
       {runError && (
         <div className="px-4 pt-2" data-testid="chat-run-error">
-          <div className="max-w-4xl mx-auto rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3">
-            <p className="text-sm font-medium text-destructive flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
-              {t('runError.title')}
-            </p>
-            <p className="mt-1 text-sm text-destructive/90 break-words">
-              {runError}
-            </p>
+          <div className="mx-auto flex max-w-4xl items-start gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2.5">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-destructive">{t('runError.title')}</p>
+              <p className="mt-0.5 break-words text-2xs text-destructive/90">{runError}</p>
+            </div>
           </div>
         </div>
       )}
 
       {/* Error bar */}
       {error && (
-        <div className="px-4 py-2 bg-destructive/10 border-t border-destructive/20">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <p className="text-sm text-destructive flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
+        <div className="border-t border-destructive/20 bg-destructive/10 px-4 py-2">
+          <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
+            <p className="flex items-center gap-2 text-xs text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
               {error}
             </p>
             <button
               onClick={clearError}
-              className="text-xs text-destructive/60 hover:text-destructive underline"
+              className="shrink-0 text-2xs text-destructive/70 hover:text-destructive underline"
             >
               {t('common:actions.dismiss')}
             </button>
@@ -1055,7 +1052,7 @@ export function Chat() {
           <aside
             data-testid="artifact-panel-aside"
             className={cn(
-              'relative z-20 hidden shrink-0 border-l border-black/5 dark:border-white/10 lg:flex lg:flex-col',
+              'relative z-20 hidden shrink-0 border-l border-border/60 lg:flex lg:flex-col',
               isMac && 'no-drag',
             )}
             style={{ width: `${panelWidthPct}%` }}
@@ -1117,12 +1114,12 @@ function QuestionDirectory({ items }: { items: QuestionDirectoryItem[] }) {
       className="w-full shrink-0 lg:w-64 xl:w-72"
       aria-label={t('questionDirectory.title')}
     >
-      <div className="sticky top-2 max-h-full overflow-hidden rounded-2xl border border-black/5 bg-black/[0.02] p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
-        <div className="mb-2 flex items-center justify-between gap-2 px-1">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <div className="sticky top-2 max-h-full overflow-hidden rounded-xl border border-border/60 bg-card/40 p-3 backdrop-blur-[2px]">
+        <div className="mb-2 flex items-center justify-between gap-2 px-0.5">
+          <h2 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
             {t('questionDirectory.title')}
           </h2>
-          <span className="rounded-full bg-black/5 px-2 py-0.5 text-2xs font-medium text-muted-foreground dark:bg-white/10">
+          <span className="rounded-md border border-border/60 bg-card/40 px-1.5 py-0.5 text-2xs font-medium text-muted-foreground">
             {items.length}
           </span>
         </div>
@@ -1135,7 +1132,7 @@ function QuestionDirectory({ items }: { items: QuestionDirectoryItem[] }) {
               onClick={() => handleJumpToMessage(item.index)}
               className={cn(
                 'group flex w-full items-start gap-2 rounded-xl px-2 py-2 text-left transition-colors',
-                'text-foreground/70 hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10',
+                'text-foreground/70 hover:bg-muted/50 hover:text-foreground',
               )}
               title={item.title}
             >
@@ -1166,16 +1163,21 @@ function WelcomeScreen() {
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center text-center h-[60vh]">
-      <h1 className="text-4xl md:text-5xl font-serif text-foreground/80 mb-8 font-normal tracking-tight">
+    <div className="flex min-h-[50vh] flex-col items-center justify-center px-4 py-10 text-center">
+      <div className={ACCENT_ICON_LG}>
+        <Sparkles className="h-5 w-5 text-primary" strokeWidth={2} />
+      </div>
+      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
         {t('welcome.subtitle')}
       </h1>
+      <p className="mt-1 text-sm text-muted-foreground">{t('welcome.title')}</p>
 
-      <div className="flex flex-wrap items-center justify-center gap-2.5 max-w-lg w-full">
+      <div className="mt-6 flex w-full max-w-lg flex-wrap items-center justify-center gap-2">
         {quickActions.map(({ key, label }) => (
-          <button 
+          <button
             key={key}
-            className="px-4 py-1.5 rounded-full border border-black/10 dark:border-white/10 text-meta font-medium text-foreground/70 hover:bg-black/5 dark:hover:bg-white/5 transition-colors bg-black/[0.02]"
+            type="button"
+            className="rounded-md border border-border/60 bg-card/40 px-3 py-1.5 text-2xs font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:bg-primary/5 hover:text-foreground"
           >
             {label}
           </button>
@@ -1190,14 +1192,14 @@ function WelcomeScreen() {
 function TypingIndicator() {
   return (
     <div className="flex gap-3" data-testid="chat-typing-indicator">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full mt-1 bg-black/5 dark:bg-white/5 text-foreground">
+      <div className={cn(ACCENT_AVATAR, 'mt-1')}>
         <Sparkles className="h-4 w-4" />
       </div>
-      <div className="bg-black/5 dark:bg-white/5 text-foreground rounded-2xl px-4 py-3">
+      <div className="rounded-xl border border-border/60 bg-card/50 px-3.5 py-2.5 text-foreground">
         <div className="flex gap-1">
-          <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-          <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-          <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          <span className="h-2 w-2 rounded-full bg-primary/50 animate-bounce" style={{ animationDelay: '0ms' }} />
+          <span className="h-2 w-2 rounded-full bg-primary/50 animate-bounce" style={{ animationDelay: '150ms' }} />
+          <span className="h-2 w-2 rounded-full bg-primary/50 animate-bounce" style={{ animationDelay: '300ms' }} />
         </div>
       </div>
     </div>
@@ -1210,11 +1212,11 @@ function ActivityIndicator({ phase }: { phase: 'tool_processing' }) {
   void phase;
   return (
     <div className="flex gap-3" data-testid="chat-activity-indicator">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full mt-1 bg-black/5 dark:bg-white/5 text-foreground">
+      <div className={cn(ACCENT_AVATAR, 'mt-1')}>
         <Sparkles className="h-4 w-4" />
       </div>
-      <div className="bg-black/5 dark:bg-white/5 text-foreground rounded-2xl px-4 py-3">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="rounded-xl border border-border/60 bg-card/50 px-3.5 py-2.5 text-foreground">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
           <span>Processing tool results…</span>
         </div>
@@ -1227,11 +1229,11 @@ function ImageGeneratingIndicator() {
   const { t } = useTranslation('chat');
   return (
     <div className="flex gap-3" data-testid="chat-image-generating-indicator">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full mt-1 bg-black/5 dark:bg-white/5 text-foreground">
+      <div className={cn(ACCENT_AVATAR, 'mt-1')}>
         <Sparkles className="h-4 w-4" />
       </div>
-      <div className="bg-black/5 dark:bg-white/5 text-foreground rounded-2xl px-4 py-3">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="rounded-xl border border-border/60 bg-card/50 px-3.5 py-2.5 text-foreground">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
           <span>{t('imageGeneration.generating')}</span>
         </div>

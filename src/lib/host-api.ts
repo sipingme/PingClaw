@@ -8,6 +8,10 @@ const HOST_API_BASE = `http://127.0.0.1:${HOST_API_PORT}`;
 /** Cached Host API auth token, fetched once from the main process via IPC. */
 let cachedHostApiToken: string | null = null;
 
+export function setCachedHostApiToken(token: string): void {
+  cachedHostApiToken = token;
+}
+
 async function getHostApiToken(): Promise<string> {
   if (cachedHostApiToken) return cachedHostApiToken;
   try {
@@ -144,7 +148,7 @@ function shouldFallbackToBrowser(message: string): boolean {
 
 function allowLocalhostFallback(): boolean {
   try {
-    return window.localStorage.getItem('clawx:allow-localhost-fallback') === '1';
+    return window.localStorage.getItem('pingclaw:allow-localhost-fallback') === '1';
   } catch {
     return false;
   }

@@ -14,6 +14,7 @@ import rehypeKatex from 'rehype-katex';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { ACCENT_AVATAR, STATUS_SUCCESS_ICON } from '@/lib/ui-patterns';
 import { invokeIpc, statFile } from '@/lib/api-client';
 import type { RawMessage, AttachedFileMeta } from '@/stores/chat';
 import { extractText, extractImages, extractToolUse, formatTimestamp, isUnresolvableImageUrl } from './message-utils';
@@ -345,7 +346,7 @@ export const ChatMessage = memo(function ChatMessage({
     >
       {/* Avatar */}
       {!isUser && (
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full mt-1 bg-black/5 dark:bg-white/5 text-foreground">
+        <div className={cn(ACCENT_AVATAR, 'mt-1')}>
           <Sparkles className="h-4 w-4" />
         </div>
       )}
@@ -402,7 +403,7 @@ export const ChatMessage = memo(function ChatMessage({
                 ) : (
                   <div
                     key={`local-${i}`}
-                    className="w-36 h-36 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 flex items-center justify-center text-muted-foreground"
+                    className="flex h-36 w-36 items-center justify-center rounded-xl border border-border/60 bg-card/40 text-muted-foreground"
                   >
                     <File className="h-8 w-8" />
                   </div>
@@ -463,7 +464,7 @@ export const ChatMessage = memo(function ChatMessage({
               }
               if (isImage && !file.preview) {
                 return (
-                  <div key={`local-${i}`} className="w-36 h-36 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 flex items-center justify-center text-muted-foreground">
+                  <div key={`local-${i}`} className="flex h-36 w-36 items-center justify-center rounded-xl border border-border/60 bg-card/40 text-muted-foreground">
                     <File className="h-8 w-8" />
                   </div>
                 );
@@ -536,7 +537,7 @@ function ToolStatusBar({
             )}
           >
             {isRunning && <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />}
-            {!isRunning && !isError && <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />}
+            {!isRunning && !isError && <CheckCircle2 className={cn('h-3.5 w-3.5 shrink-0', STATUS_SUCCESS_ICON)} />}
             {isError && <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0" />}
             <Wrench className="h-3 w-3 shrink-0 opacity-60" />
             <span className="font-mono text-xs font-medium">{tool.name}</span>
@@ -617,7 +618,7 @@ function AssistantHoverBar({
         className="h-6 w-6"
         onClick={copyContent}
       >
-        {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+        {copied ? <Check className={cn('h-3 w-3', STATUS_SUCCESS_ICON)} /> : <Copy className="h-3 w-3" />}
       </Button>
     </div>
   );
@@ -631,7 +632,7 @@ function UserMessageBubble({
   text: string;
 }) {
   return (
-    <div className="relative rounded-2xl px-4 py-3 bg-brand text-white shadow-sm">
+    <div className="relative rounded-xl border border-primary/25 bg-primary px-4 py-3 text-primary-foreground shadow-[0_0_28px_-14px_hsl(var(--primary)/0.65)]">
       <p className="whitespace-pre-wrap break-words text-sm">{text}</p>
     </div>
   );
@@ -647,7 +648,7 @@ function AssistantMarkdown({
   isStreaming: boolean;
 }) {
   return (
-    <div className="prose prose-sm dark:prose-invert w-full max-w-none break-words text-foreground">
+    <div className="prose prose-sm prose-chat dark:prose-invert w-full max-w-none break-words rounded-xl border border-border/50 bg-card/45 px-4 py-3 text-foreground backdrop-blur-[2px]">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false, output: 'html' }]]}
@@ -657,13 +658,13 @@ function AssistantMarkdown({
             const isInline = !match && !className;
             if (isInline) {
               return (
-                <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono break-words break-all" {...props}>
+                <code className="font-mono break-words break-all" {...props}>
                   {children}
                 </code>
               );
             }
             return (
-              <pre className="bg-muted rounded-lg p-4 overflow-x-auto">
+              <pre className="overflow-x-auto rounded-lg p-4">
                 <code className={cn('text-sm font-mono', className)} {...props}>
                   {children}
                 </code>
@@ -672,7 +673,7 @@ function AssistantMarkdown({
           },
           a({ href, children }) {
             return (
-              <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-words break-all">
+              <a href={href} target="_blank" rel="noopener noreferrer" className="break-words break-all hover:underline">
                 {children}
               </a>
             );
@@ -688,7 +689,7 @@ function AssistantMarkdown({
         {normalizeLatexDelimiters(text)}
       </ReactMarkdown>
       {isStreaming && (
-        <span className="inline-block w-2 h-4 bg-foreground/50 animate-pulse ml-0.5" />
+        <span className="ml-0.5 inline-block h-4 w-2 animate-pulse bg-primary/70" />
       )}
     </div>
   );
@@ -726,8 +727,8 @@ function FileCard({ file, onOpen }: { file: AttachedFileMeta; onOpen?: (file: At
   return (
     <div 
       className={cn(
-        "flex items-center gap-3 rounded-xl border border-black/10 dark:border-white/10 px-3 py-2.5 bg-black/5 dark:bg-white/5 max-w-[220px]",
-        file.filePath && "cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+        "flex items-center gap-3 rounded-xl border border-border/60 bg-card/40 px-3 py-2.5 max-w-[220px]",
+        file.filePath && "cursor-pointer hover:bg-muted/50 transition-colors"
       )}
       onClick={handleOpen}
       title={file.filePath ? "Open file" : undefined}
@@ -763,7 +764,7 @@ function ImageThumbnail({
   void filePath; void base64; void mimeType;
   return (
     <div
-      className="relative w-36 h-36 rounded-xl border overflow-hidden border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 group/img cursor-zoom-in"
+      className="relative h-36 w-36 cursor-zoom-in overflow-hidden rounded-xl border border-border/60 bg-card/40 group/img"
       onClick={onPreview}
     >
       <img src={src} alt={fileName} className="w-full h-full object-cover" />
@@ -794,7 +795,7 @@ function ImagePreviewCard({
   void filePath; void base64; void mimeType;
   return (
     <div
-      className="relative max-w-xs rounded-xl border overflow-hidden border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 group/img cursor-zoom-in"
+      className="relative max-w-xs cursor-zoom-in overflow-hidden rounded-xl border border-border/60 bg-card/40 group/img"
       onClick={onPreview}
     >
       <img src={src} alt={fileName} className="block w-full" />
@@ -860,7 +861,7 @@ function ImageLightbox({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 bg-white/10 hover:bg-white/20 text-white"
+              className="h-8 w-8 border border-white/15 bg-card/20 text-white backdrop-blur-sm hover:bg-card/35"
               onClick={handleShowInFolder}
               title="在文件夹中显示"
             >
@@ -870,7 +871,7 @@ function ImageLightbox({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 bg-white/10 hover:bg-white/20 text-white"
+            className="h-8 w-8 border border-white/15 bg-card/20 text-white backdrop-blur-sm hover:bg-card/35"
             onClick={onClose}
             title="关闭"
           >

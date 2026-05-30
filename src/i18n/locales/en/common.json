@@ -44,6 +44,14 @@
         "hide": "Hide",
         "clear": "Clear"
     },
+    "window": {
+        "minimize": "Minimize",
+        "maximize": "Maximize",
+        "restore": "Restore",
+        "close": "Close",
+        "resizeSidebar": "Drag to resize sidebar",
+        "resizePanel": "Drag to resize width"
+    },
     "status": {
         "running": "Running",
         "stopped": "Stopped",

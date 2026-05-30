@@ -3,6 +3,7 @@
  * Keeps focus within the renderer to avoid Windows focus loss after native dialogs.
  */
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -22,13 +23,16 @@ export function ConfirmDialog({
   open,
   title,
   message,
-  confirmLabel = 'OK',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   variant = 'default',
   onConfirm,
   onCancel,
   onError,
 }: ConfirmDialogProps) {
+  const { t } = useTranslation('common');
+  const resolvedConfirmLabel = confirmLabel ?? t('actions.confirm');
+  const resolvedCancelLabel = cancelLabel ?? t('actions.cancel');
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [confirming, setConfirming] = useState(false);
   const [prevOpen, setPrevOpen] = useState(open);
@@ -97,14 +101,14 @@ export function ConfirmDialog({
             onClick={onCancel}
             disabled={confirming}
           >
-            {cancelLabel}
+            {resolvedCancelLabel}
           </Button>
           <Button
             variant={variant === 'destructive' ? 'destructive' : 'default'}
             onClick={handleConfirm}
             disabled={confirming}
           >
-            {confirmLabel}
+            {resolvedConfirmLabel}
           </Button>
         </div>
       </div>

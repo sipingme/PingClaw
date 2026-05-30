@@ -98,7 +98,9 @@
         "generateQRCode": "Generate QR Code",
         "updateAndReconnect": "Update & Reconnect",
         "saveAndConnect": "Save & Connect",
-        "envVar": "Environment Variable: {{var}}"
+        "envVar": "Environment Variable: {{var}}",
+        "credentialsSection": "Credentials",
+        "credentialsSectionDesc": "Enter the keys and identifiers required to connect this channel"
     },
     "health": {
         "state": {
