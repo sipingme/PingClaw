@@ -1005,7 +1005,7 @@ export function Settings() {
               <div className="mt-3 flex flex-wrap gap-2">
                 {([
                   ['https://claw.siping.me/', t('about.docs')],
-                  ['https://github.com/sipingme/pingClaw', t('about.github')],
+                  ['https://github.com/sipingme/PingClaw', t('about.github')],
                   ['https://claw.siping.me/faq', t('about.faq')],
                 ] as const).map(([url, label]) => (
                   <button

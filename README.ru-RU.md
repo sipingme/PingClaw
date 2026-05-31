@@ -150,13 +150,13 @@ PingClaw также предварительно упаковывает полн
 
 #### Готовые релизы (рекомендуется)
 
-Скачайте последний релиз для вашей платформы со страницы [Releases](https://github.com/sipingme/pingClaw/releases).
+Скачайте последний релиз для вашей платформы со страницы [Releases](https://github.com/sipingme/PingClaw/releases).
 
 #### Сборка из исходников
 
 ```bash
 # Клонирование репозитория
-git clone https://github.com/sipingme/pingClaw.git
+git clone https://github.com/sipingme/PingClaw.git
 cd PingClaw
 
 # Инициализация проекта

@@ -55,7 +55,7 @@ npmRebuild: false
 publish:
   - provider: github
     owner: sipingme
-    repo: pingClaw
+    repo: PingClaw
 
 # macOS Configuration
 mac:

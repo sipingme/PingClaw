@@ -157,13 +157,13 @@ PingClaw can automatically check for new versions on startup. When an update is 
 
 #### Pre-built Releases (Recommended)
 
-Download the latest release for your platform from the [Releases](https://github.com/sipingme/pingClaw/releases) page.
+Download the latest release for your platform from the [Releases](https://github.com/sipingme/PingClaw/releases) page.
 
 #### Build from Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/sipingme/pingClaw.git
+git clone https://github.com/sipingme/PingClaw.git
 cd PingClaw
 
 # Initialize the project

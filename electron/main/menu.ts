@@ -182,7 +182,7 @@ export function createMenu(): void {
         {
           label: 'Report Issue',
           click: async () => {
-            await shell.openExternal('https://github.com/sipingme/pingClaw/issues');
+            await shell.openExternal('https://github.com/sipingme/PingClaw/issues');
           },
         },
         { type: 'separator' },
