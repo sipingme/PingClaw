@@ -1,4 +1,5 @@
-import pingclawIcon from '@/assets/logo.svg';
+import pingclawIcon from '@/assets/logo.png';
+import pingclawIcon2x from '@/assets/logo@2x.png';
 import { cn } from '@/lib/utils';
 
 interface PingClawLogoProps {
@@ -8,20 +9,12 @@ interface PingClawLogoProps {
 
 export function PingClawLogo({ className, alt = 'PingClaw' }: PingClawLogoProps) {
   return (
-    <span
-      role="img"
-      aria-label={alt}
-      className={cn('inline-block shrink-0 bg-primary aspect-[550/450]', className)}
-      style={{
-        WebkitMaskImage: `url(${pingclawIcon})`,
-        WebkitMaskRepeat: 'no-repeat',
-        WebkitMaskPosition: 'center',
-        WebkitMaskSize: 'contain',
-        maskImage: `url(${pingclawIcon})`,
-        maskRepeat: 'no-repeat',
-        maskPosition: 'center',
-        maskSize: 'contain',
-      }}
+    <img
+      src={pingclawIcon}
+      srcSet={`${pingclawIcon} 1x, ${pingclawIcon2x} 2x`}
+      alt={alt}
+      className={cn('inline-block shrink-0 object-contain', className)}
+      draggable={false}
     />
   );
 }

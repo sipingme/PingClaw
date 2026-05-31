@@ -643,7 +643,7 @@ export function Settings() {
                 <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                   {t('gateway.status')}
                 </p>
-                <p className="mt-1 text-lg font-semibold tabular-nums tracking-tight text-foreground">
+                <p className="mt-1 text-xs font-medium tabular-nums tracking-tight text-foreground">
                   {t('gateway.port')} {gatewayStatus.port}
                 </p>
               </div>
@@ -990,9 +990,7 @@ export function Settings() {
           >
             <div className="rounded-xl border border-border/60 bg-gradient-to-br from-primary/5 via-card/40 to-card/20 p-4">
               <div className="mb-3 flex items-start gap-3">
-                <div className={cn(ACCENT_ICON_MD, 'overflow-hidden')}>
-                  <PingClawLogo className="h-6 w-6" />
-                </div>
+                <PingClawLogo className="h-10 w-10 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-semibold text-foreground">{t('about.appName')}</p>
@@ -1000,15 +998,15 @@ export function Settings() {
                       v{currentVersion}
                     </Badge>
                   </div>
-                  <p className="mt-1 text-2xs leading-relaxed text-muted-foreground">{t('about.tagline')}</p>
+                  <p className="mt-1 text-xs font-medium text-foreground">{t('about.tagline')}</p>
+                  <p className="mt-1.5 text-2xs leading-relaxed text-muted-foreground">{t('about.description')}</p>
                 </div>
               </div>
-              <p className="text-2xs text-muted-foreground">{t('about.basedOn')}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {([
-                  ['https://claw-x.com', t('about.docs')],
+                  ['https://claw.siping.me/', t('about.docs')],
                   ['https://github.com/sipingme/pingClaw', t('about.github')],
-                  ['https://icnnp7d0dymg.feishu.cn/wiki/UyfOwQ2cAiJIP6kqUW8cte5Bnlc', t('about.faq')],
+                  ['https://claw.siping.me/faq', t('about.faq')],
                 ] as const).map(([url, label]) => (
                   <button
                     key={url}

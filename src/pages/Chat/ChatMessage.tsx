@@ -633,7 +633,7 @@ function UserMessageBubble({
 }) {
   return (
     <div className="relative rounded-xl border border-primary/25 bg-primary px-4 py-3 text-primary-foreground shadow-[0_0_28px_-14px_hsl(var(--primary)/0.65)]">
-      <p className="whitespace-pre-wrap break-words text-sm">{text}</p>
+      <p className="whitespace-pre-wrap break-words text-meta leading-normal">{text}</p>
     </div>
   );
 }
@@ -648,11 +648,39 @@ function AssistantMarkdown({
   isStreaming: boolean;
 }) {
   return (
-    <div className="prose prose-sm prose-chat dark:prose-invert w-full max-w-none break-words rounded-xl border border-border/50 bg-card/45 px-4 py-3 text-foreground backdrop-blur-[2px]">
+    <div className="prose prose-chat dark:prose-invert w-full max-w-none break-words rounded-xl border border-border/50 bg-card/45 px-4 py-3 text-foreground backdrop-blur-[2px]">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false, output: 'html' }]]}
         components={{
+          p({ children, ...props }) {
+            return (
+              <p className="leading-normal" {...props}>
+                {children}
+              </p>
+            );
+          },
+          h1({ children, ...props }) {
+            return (
+              <p className="font-semibold leading-normal" {...props}>
+                {children}
+              </p>
+            );
+          },
+          h2({ children, ...props }) {
+            return (
+              <p className="font-semibold leading-normal" {...props}>
+                {children}
+              </p>
+            );
+          },
+          h3({ children, ...props }) {
+            return (
+              <p className="font-semibold leading-normal" {...props}>
+                {children}
+              </p>
+            );
+          },
           code({ className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
             const isInline = !match && !className;

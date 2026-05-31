@@ -153,7 +153,7 @@ export function UpdateSettings() {
       <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-card/20 px-3 py-2.5">
         <div>
           <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">{t('updates.currentVersion')}</p>
-          <p className="text-lg font-semibold tabular-nums tracking-tight text-foreground">v{currentVersion}</p>
+          <p className="text-xs font-medium tabular-nums tracking-tight text-foreground">v{currentVersion}</p>
         </div>
         {renderStatusIcon()}
       </div>

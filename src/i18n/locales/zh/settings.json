@@ -282,7 +282,8 @@
   "about": {
     "title": "关于",
     "appName": "PingClaw",
-    "tagline": "图形化 AI 助手",
+    "tagline": "OpenClaw 智能体的桌面客户端",
+    "description": "PingClaw 基于 OpenClaw 构建，把命令行式的 AI 编排能力封装成易用的图形界面。你可以在桌面端与 Agent 对话、管理多个工作区、连接微信/飞书/Telegram 等消息通道、安装技能与定时任务，并由应用自动托管网关进程——无需终端或手动编辑配置文件即可上手。",
     "basedOn": "基于 OpenClaw",
     "version": "版本 {{version}}",
     "docs": "官网",

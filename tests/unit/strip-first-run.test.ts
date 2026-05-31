@@ -23,6 +23,8 @@ import {
   ensurePingClawDefaultIdentity,
   ensurePingClawIdentityFile,
   mergePingClawSection,
+  repairLegacyClawXBranding,
+  repairLegacyClawXWorkspaceBranding,
   stripFirstRunSection,
 } from '../../electron/utils/openclaw-workspace';
 
@@ -165,6 +167,71 @@ describe('stripFirstRunSection', () => {
     expect(merged).toContain('<!-- pingclaw:begin -->');
     expect(merged).toContain('<!-- pingclaw:end -->');
   });
+
+  it('replaces legacy clawx markers when merging context', () => {
+    const existing = [
+      '# AGENTS.md',
+      '',
+      '<!-- clawx:begin -->',
+      '## ClawX Environment',
+      '',
+      'You are ClawX.',
+      '<!-- clawx:end -->',
+    ].join('\n');
+    const section = '## PingClaw Environment\n\nYou are PingClaw.';
+
+    const merged = mergePingClawSection(existing, section);
+
+    expect(merged).not.toContain('ClawX');
+    expect(merged).not.toContain('<!-- clawx:begin -->');
+    expect(merged).toContain('<!-- pingclaw:begin -->');
+    expect(merged).toContain('## PingClaw Environment');
+  });
+});
+
+describe('repairLegacyClawXBranding', () => {
+  it('rewrites ClawX branding and legacy markers in workspace markdown', () => {
+    const input = [
+      '<!-- clawx:begin -->',
+      '## ClawX Environment',
+      'You are ClawX.',
+      '<!-- clawx:end -->',
+    ].join('\n');
+
+    const repaired = repairLegacyClawXBranding(input);
+
+    expect(repaired).not.toContain('ClawX');
+    expect(repaired).toContain('<!-- pingclaw:begin -->');
+    expect(repaired).toContain('## PingClaw Environment');
+    expect(repaired).toContain('You are PingClaw.');
+  });
+});
+
+describe('repairLegacyClawXWorkspaceBranding', () => {
+  it('repairs legacy ClawX branding in workspace bootstrap files on disk', async () => {
+    const workspaceDir = join(testHome, '.openclaw', 'workspace');
+    await mkdir(workspaceDir, { recursive: true });
+    await writeFile(
+      join(workspaceDir, 'AGENTS.md'),
+      [
+        '# AGENTS.md',
+        '',
+        '<!-- clawx:begin -->',
+        '## ClawX Environment',
+        '',
+        'You are ClawX.',
+        '<!-- clawx:end -->',
+      ].join('\n'),
+      'utf-8',
+    );
+
+    await repairLegacyClawXWorkspaceBranding();
+
+    const agents = await readFile(join(workspaceDir, 'AGENTS.md'), 'utf-8');
+    expect(agents).not.toContain('ClawX');
+    expect(agents).toContain('## PingClaw Environment');
+    expect(agents).toContain('You are PingClaw.');
+  });
 });
 
 describe('ensurePingClawIdentityFile', () => {
@@ -175,6 +242,29 @@ describe('ensurePingClawIdentityFile', () => {
     await ensurePingClawIdentityFile(workspaceDir);
 
     await expect(readFile(join(workspaceDir, 'IDENTITY.md'), 'utf-8')).resolves.toContain('PingClaw');
+  });
+
+  it('replaces legacy ClawX identity files with the PingClaw default', async () => {
+    const workspaceDir = join(testHome, '.openclaw', 'workspace');
+    await mkdir(workspaceDir, { recursive: true });
+
+    await writeFile(
+      join(workspaceDir, 'IDENTITY.md'),
+      [
+        '# IDENTITY.md - ClawX',
+        '',
+        '- **Name:** ClawX',
+        '- **Creature:** desktop AI assistant',
+        '- **Emoji:** 🐾',
+      ].join('\n'),
+      'utf-8',
+    );
+
+    await ensurePingClawIdentityFile(workspaceDir);
+    const identity = await readFile(join(workspaceDir, 'IDENTITY.md'), 'utf-8');
+    await expect(identity).toContain('PingClaw');
+    await expect(identity).toContain('我是 PingClaw，🐾，一个桌面 AI 助手。');
+    await expect(identity).not.toContain('ClawX');
   });
 
   it('replaces the untouched OpenClaw identity template but preserves custom identities', async () => {

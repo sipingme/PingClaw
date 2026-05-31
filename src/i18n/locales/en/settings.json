@@ -282,7 +282,8 @@
   "about": {
     "title": "About",
     "appName": "PingClaw",
-    "tagline": "Graphical AI Assistant",
+    "tagline": "Desktop client for OpenClaw AI agents",
+    "description": "Built on OpenClaw, PingClaw turns CLI-style AI orchestration into an approachable desktop experience. Chat with agents, manage workspaces, connect channels such as WeChat, Feishu, and Telegram, install skills and scheduled jobs, and let the app host the gateway for you—no terminal or hand-edited config files required.",
     "basedOn": "Based on OpenClaw",
     "version": "Version {{version}}",
     "docs": "Website",

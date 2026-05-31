@@ -293,10 +293,46 @@
   background: hsl(var(--muted));
 }
 
-/* Chat markdown — pingai-web code surfaces */
+/* Chat markdown — uniform compact body size for assistant replies */
 .prose-chat {
   --tw-prose-links: hsl(var(--primary));
   --tw-prose-code: hsl(var(--foreground));
+  --tw-prose-body: 13px;
+  --tw-prose-headings: 13px;
+  --tw-prose-lead: 13px;
+  --tw-prose-bold: 13px;
+  --tw-prose-counters: 13px;
+  --tw-prose-bullets: 13px;
+  --tw-prose-hr: 13px;
+  --tw-prose-quotes: 13px;
+  --tw-prose-quote-borders: 13px;
+  --tw-prose-captions: 13px;
+  --tw-prose-kbd: 13px;
+  --tw-prose-pre-code: 13px;
+  --tw-prose-th-borders: 13px;
+  --tw-prose-td-borders: 13px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.prose-chat :where(p, li, ul, ol, blockquote, td, th, h1, h2, h3, h4, h5, h6, strong, em, a, span) {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.prose-chat :where(h1, h2, h3, h4, h5, h6) {
+  font-weight: 600;
+  margin-top: 0.75em;
+  margin-bottom: 0.25em;
+}
+
+.prose-chat :where(p) {
+  margin-top: 0;
+  margin-bottom: 0.5em;
+}
+
+.prose-chat :where(p:last-child) {
+  margin-bottom: 0;
 }
 
 .dark .prose-chat pre,

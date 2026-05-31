@@ -38,7 +38,7 @@
       delete flat['X-Title'];
       delete flat['x-openrouter-title'];
       delete flat['X-OpenRouter-Title'];
-      flat['HTTP-Referer'] = 'https://claw-x.com';
+      flat['HTTP-Referer'] = 'https://claw.siping.me/';
       flat['X-OpenRouter-Title'] = 'PingClaw';
       init.headers = flat;
     }

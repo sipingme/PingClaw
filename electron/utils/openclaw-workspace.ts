@@ -13,8 +13,11 @@ import { getResourcesDir } from './paths';
 
 const CLAWX_BEGIN = '<!-- pingclaw:begin -->';
 const CLAWX_END = '<!-- pingclaw:end -->';
-const DEFAULT_BOOTSTRAP_FILENAME = 'BOOTSTRAP.md';
+const LEGACY_CLAWX_BEGIN = '<!-- clawx:begin -->';
+const LEGACY_CLAWX_END = '<!-- clawx:end -->';
+const CONTEXT_FILE_SUFFIX_RE = /\.(pingclaw|clawx)\.md$/;
 const DEFAULT_IDENTITY_FILENAME = 'IDENTITY.md';
+const DEFAULT_BOOTSTRAP_FILENAME = 'BOOTSTRAP.md';
 
 // ── Helpers ──────────────────────────────────────────────────────
 
@@ -38,6 +41,8 @@ export function buildDefaultPingClawIdentityContent(): string {
     '- **Emoji:** 🐾',
     '- **Avatar:**',
     '',
+    'When asked who you are in Chinese, respond exactly: 我是 PingClaw，🐾，一个桌面 AI 助手。',
+    '',
     'PingClaw uses a default desktop identity instead of chat-first bootstrap.',
     '',
   ].join('\n');
@@ -49,6 +54,30 @@ export function isOpenClawIdentityTemplate(content: string): boolean {
     && normalized.includes('_(pick something you like)_')
     && normalized.includes('- **Name:**')
     && normalized.includes('- **Emoji:**');
+}
+
+export function isLegacyClawXIdentity(content: string): boolean {
+  const normalized = content.replace(/\r\n/g, '\n');
+  return normalized.includes('# IDENTITY.md - ClawX')
+    || normalized.includes('- **Name:** ClawX');
+}
+
+/** Rewrite legacy ClawX branding that can leak into chat answers via workspace bootstrap files. */
+export function repairLegacyClawXBranding(content: string): string {
+  return content
+    .replaceAll(LEGACY_CLAWX_BEGIN, CLAWX_BEGIN)
+    .replaceAll(LEGACY_CLAWX_END, CLAWX_END)
+    .replace(/## ClawX Environment/g, '## PingClaw Environment')
+    .replace(/## ClawX Tool Notes/g, '## PingClaw Tool Notes')
+    .replace(/\bClawX\b/g, 'PingClaw');
+}
+
+export function containsLegacyClawXBranding(content: string): boolean {
+  return /\bClawX\b/.test(content)
+    || content.includes(LEGACY_CLAWX_BEGIN)
+    || content.includes(LEGACY_CLAWX_END)
+    || content.includes('## ClawX Environment')
+    || content.includes('## ClawX Tool Notes');
 }
 
 async function writeFileIfMissing(path: string, content: string): Promise<boolean> {
@@ -90,9 +119,11 @@ export async function ensurePingClawIdentityFile(
       return;
     }
 
-    if (isOpenClawIdentityTemplate(existing) && existing !== defaultIdentity) {
-      await writeFile(identityPath, defaultIdentity, 'utf-8');
-      wroteIdentity = true;
+    if (isOpenClawIdentityTemplate(existing) || isLegacyClawXIdentity(existing)) {
+      if (existing !== defaultIdentity) {
+        await writeFile(identityPath, defaultIdentity, 'utf-8');
+        wroteIdentity = true;
+      }
     }
   }
 
@@ -116,6 +147,41 @@ export async function ensurePingClawDefaultIdentity(): Promise<void> {
   }
 }
 
+/**
+ * Replace lingering ClawX branding inside workspace bootstrap markdown files.
+ * These files are injected into model context and can affect "who are you?" answers.
+ */
+export async function repairLegacyClawXWorkspaceBranding(): Promise<void> {
+  const workspaceDirs = await resolveAllWorkspaceDirs();
+  for (const { dir: workspaceDir } of workspaceDirs) {
+    if (!(await fileExists(workspaceDir))) continue;
+
+    let entries: string[];
+    try {
+      entries = (await readdir(workspaceDir)).filter((file) => file.endsWith('.md'));
+    } catch {
+      continue;
+    }
+
+    for (const file of entries) {
+      const filePath = join(workspaceDir, file);
+      let content: string;
+      try {
+        content = await readFile(filePath, 'utf-8');
+      } catch {
+        continue;
+      }
+      if (!containsLegacyClawXBranding(content)) continue;
+
+      const repaired = repairLegacyClawXBranding(content);
+      if (repaired === content) continue;
+
+      await writeFile(filePath, repaired, 'utf-8');
+      logger.info(`Repaired legacy ClawX branding in ${file} (${workspaceDir})`);
+    }
+  }
+}
+
 // ── Pure helpers (no I/O) ────────────────────────────────────────
 
 /**
@@ -124,13 +190,19 @@ export async function ensurePingClawDefaultIdentity(): Promise<void> {
  * Otherwise appends it at the end.
  */
 export function mergePingClawSection(existing: string, section: string): string {
+  const normalizedExisting = repairLegacyClawXBranding(existing);
   const wrapped = `${CLAWX_BEGIN}\n${section.trim()}\n${CLAWX_END}`;
-  const beginIdx = existing.indexOf(CLAWX_BEGIN);
-  const endIdx = existing.indexOf(CLAWX_END);
+  const legacyBeginIdx = normalizedExisting.indexOf(LEGACY_CLAWX_BEGIN);
+  const legacyEndIdx = normalizedExisting.indexOf(LEGACY_CLAWX_END);
+  const beginIdx = normalizedExisting.indexOf(CLAWX_BEGIN);
+  const endIdx = normalizedExisting.indexOf(CLAWX_END);
   if (beginIdx !== -1 && endIdx !== -1) {
-    return existing.slice(0, beginIdx) + wrapped + existing.slice(endIdx + CLAWX_END.length);
+    return normalizedExisting.slice(0, beginIdx) + wrapped + normalizedExisting.slice(endIdx + CLAWX_END.length);
   }
-  return existing.trimEnd() + '\n\n' + wrapped + '\n';
+  if (legacyBeginIdx !== -1 && legacyEndIdx !== -1) {
+    return normalizedExisting.slice(0, legacyBeginIdx) + wrapped + normalizedExisting.slice(legacyEndIdx + LEGACY_CLAWX_END.length);
+  }
+  return normalizedExisting.trimEnd() + '\n\n' + wrapped + '\n';
 }
 
 /**
@@ -333,7 +405,7 @@ async function mergePingClawContextOnce(options: EnsurePingClawContextOptions = 
 
   let files: string[];
   try {
-    files = (await readdir(contextDir)).filter((f) => f.endsWith('.pingclaw.md'));
+    files = (await readdir(contextDir)).filter((f) => CONTEXT_FILE_SUFFIX_RE.test(f));
   } catch {
     return { missing: 0, retryableMissing: 0 };
   }
@@ -357,7 +429,7 @@ async function mergePingClawContextOnce(options: EnsurePingClawContextOptions = 
     }
 
     for (const file of files) {
-      const targetName = file.replace('.pingclaw.md', '.md');
+      const targetName = file.replace(CONTEXT_FILE_SUFFIX_RE, '.md');
       const targetPath = join(workspaceDir, targetName);
 
       if (!(await fileExists(targetPath))) {
@@ -370,7 +442,7 @@ async function mergePingClawContextOnce(options: EnsurePingClawContextOptions = 
 
       const section = await readFile(join(contextDir, file), 'utf-8');
       const originalExisting = await readFile(targetPath, 'utf-8');
-      let existing = originalExisting;
+      let existing = repairLegacyClawXBranding(originalExisting);
 
       // Strip unwanted Gateway-seeded sections before merging
       if (targetName === 'AGENTS.md') {

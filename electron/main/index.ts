@@ -24,6 +24,7 @@ import { loadExternalMainExtensions } from '../extensions/_ext-bridge.generated'
 import {
   ensurePingClawContext,
   ensurePingClawDefaultIdentity,
+  repairLegacyClawXWorkspaceBranding,
   repairPingClawOnlyBootstrapFiles,
 } from '../utils/openclaw-workspace';
 import { autoInstallCliIfNeeded, generateCompletionCache, installCompletionToProfile } from '../utils/openclaw-cli';
@@ -380,6 +381,9 @@ async function initialize(): Promise<void> {
   if (!isE2EMode) {
     void ensurePingClawDefaultIdentity().catch((error) => {
       logger.warn('Failed to seed default PingClaw identity:', error);
+    });
+    void repairLegacyClawXWorkspaceBranding().catch((error) => {
+      logger.warn('Failed to repair legacy ClawX workspace branding:', error);
     });
   }
 

@@ -345,8 +345,8 @@ export function Sidebar() {
         )}
       >
         {!sidebarCollapsed && (
-          <div className="flex items-center gap-2 px-2 overflow-hidden">
-            <PingClawLogo className="h-6 w-auto" />
+          <div className="flex items-center gap-1 px-2 overflow-hidden">
+            <PingClawLogo className="h-8 w-8" />
             <span className="text-sm font-semibold truncate whitespace-nowrap text-foreground">
               Ping<span className="text-primary">Claw</span>
             </span>
