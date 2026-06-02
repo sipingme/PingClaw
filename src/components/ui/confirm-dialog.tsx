@@ -98,6 +98,8 @@ export function ConfirmDialog({
           <Button
             ref={cancelRef}
             variant="outline"
+            size="sm"
+            className="min-w-20"
             onClick={onCancel}
             disabled={confirming}
           >
@@ -105,6 +107,8 @@ export function ConfirmDialog({
           </Button>
           <Button
             variant={variant === 'destructive' ? 'destructive' : 'default'}
+            size="sm"
+            className="min-w-20"
             onClick={handleConfirm}
             disabled={confirming}
           >
