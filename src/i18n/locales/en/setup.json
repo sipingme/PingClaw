@@ -183,11 +183,6 @@
         "back": "Back",
         "skipStep": "Skip this step",
         "skipSetup": "Skip setup",
-        "skipSetupHintTitle": "If you skip setup",
-        "skipSetupHintItems": [
-            "You'll enter the app without runtime checks or component install",
-            "Chat won't work until Gateway is ready and an API key is configured"
-        ],
         "completeHint": "After entering the app, configure an AI model API key in Settings first.",
         "getStarted": "Get Started"
     },

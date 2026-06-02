@@ -235,6 +235,18 @@ async function terminateOrphanedProcessIds(port: number, pids: string[]): Promis
   }
 }
 
+/** Kill every process listening on the gateway port (including a stale external gateway). */
+export async function forceKillAllGatewayListeners(port: number): Promise<void> {
+  const pids = await getListeningProcessIds(port);
+  if (pids.length === 0) {
+    return;
+  }
+  await terminateOrphanedProcessIds(port, pids);
+  if (process.platform === 'win32') {
+    await waitForPortFree(port, 10000);
+  }
+}
+
 export async function findExistingGatewayProcess(options: {
   port: number;
   ownedPid?: number;

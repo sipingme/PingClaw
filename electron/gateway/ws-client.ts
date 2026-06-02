@@ -7,6 +7,7 @@ import {
   signDevicePayload,
 } from '../utils/device-identity';
 import { logger } from '../utils/logger';
+import { GATEWAY_PROTOCOL_VERSION } from '../../shared/gateway-protocol';
 
 export const GATEWAY_CHALLENGE_TIMEOUT_MS = 10_000;
 export const GATEWAY_CONNECT_HANDSHAKE_TIMEOUT_MS = 20_000;
@@ -101,8 +102,6 @@ export async function waitForGatewayReady(options: {
   logger.error(`Gateway failed to become ready after ${retries} attempts on port ${options.port}`);
   throw new Error(`Gateway failed to start after ${retries} retries (port ${options.port})`);
 }
-
-const GATEWAY_PROTOCOL_VERSION = 4;
 
 export function buildGatewayConnectFrame(options: {
   challengeNonce: string;

@@ -33,12 +33,14 @@ import { prepareGatewayLaunchContext } from './config-sync';
 import { connectGatewaySocket, waitForGatewayReady } from './ws-client';
 import {
   findExistingGatewayProcess,
+  forceKillAllGatewayListeners,
   runOpenClawDoctorRepair,
   terminateOwnedGatewayProcess,
   unloadLaunchctlGatewayService,
   waitForPortFree,
   warmupManagedPythonReadiness,
 } from './supervisor';
+import { isProtocolMismatchError } from './startup-recovery';
 import { GatewayConnectionMonitor } from './connection-monitor';
 import { GatewayLifecycleController, LifecycleSupersededError } from './lifecycle-controller';
 import { launchGatewayProcess } from './process-launcher';
@@ -423,6 +425,20 @@ export class GatewayManager extends EventEmitter {
         },
         delay: async (ms) => {
           await new Promise((resolve) => setTimeout(resolve, ms));
+        },
+        beforeRetry: async (error) => {
+          if (!isProtocolMismatchError(error)) {
+            return;
+          }
+          logger.warn(
+            `Gateway protocol mismatch on port ${this.status.port}; clearing listeners before retry`,
+          );
+          if (this.process && this.ownsProcess) {
+            await terminateOwnedGatewayProcess(this.process);
+          }
+          await forceKillAllGatewayListeners(this.status.port);
+          this.process = null;
+          this.ownsProcess = false;
         },
       });
     } catch (error) {

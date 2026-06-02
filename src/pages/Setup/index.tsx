@@ -404,21 +404,6 @@ export function Setup() {
                     </SetupHint>
                   </div>
                 )}
-                {safeStepIndex === STEP.WELCOME && (
-                  <div className="!mt-8">
-                    <SetupHint variant="warn" className="gap-2 px-3 py-2.5 text-xs leading-relaxed">
-                      <p className="font-medium text-foreground/90">{t('nav.skipSetupHintTitle')}</p>
-                      <ul className="mt-1 space-y-1 text-2xs text-muted-foreground">
-                        {(t('nav.skipSetupHintItems', { returnObjects: true }) as string[]).map((item) => (
-                          <li key={item} className="flex gap-2">
-                            <span className="shrink-0 text-yellow-500/80">•</span>
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </SetupHint>
-                  </div>
-                )}
                 {isLastStep && (
                   <p className="text-center text-xs text-muted-foreground">{t('nav.completeHint')}</p>
                 )}

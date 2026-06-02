@@ -27,6 +27,8 @@ type StartupHooks = {
   runDoctorRepair: () => Promise<boolean>;
   onDoctorRepairSuccess: () => void;
   delay: (ms: number) => Promise<void>;
+  /** Called before a transient-error retry (e.g. clear stale gateway on protocol mismatch). */
+  beforeRetry?: (error: unknown) => Promise<void>;
 };
 
 export async function runGatewayStartupSequence(hooks: StartupHooks): Promise<void> {
@@ -114,6 +116,7 @@ export async function runGatewayStartupSequence(hooks: StartupHooks): Promise<vo
 
       if (recoveryAction === 'retry') {
         logger.warn(`Transient start error: ${String(error)}. Retrying... (${startAttempts}/${maxStartAttempts})`);
+        await hooks.beforeRetry?.(error);
         await hooks.delay(1000);
         continue;
       }

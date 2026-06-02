@@ -20,6 +20,8 @@ const TRANSIENT_START_ERROR_PATTERNS: RegExp[] = [
   /Connect handshake timeout/i,
   // Port occupied after orphan kill: transient, worth retrying with backoff
   /Port \d+ still occupied after \d+ms/i,
+  // Stale gateway on port (older protocol) or client/server version skew
+  /protocol mismatch/i,
 ];
 
 function normalizeLogLine(value: string): string {
@@ -66,6 +68,13 @@ export function shouldAttemptConfigAutoRepair(
 ): boolean {
   if (alreadyAttempted) return false;
   return hasInvalidConfigFailureSignal(startupError, startupStderrLines);
+}
+
+export function isProtocolMismatchError(error: unknown): boolean {
+  const errorText = error instanceof Error
+    ? error.message
+    : String(error ?? '');
+  return /protocol mismatch/i.test(errorText);
 }
 
 export function isTransientGatewayStartError(error: unknown): boolean {

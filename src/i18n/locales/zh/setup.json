@@ -183,11 +183,6 @@
         "back": "上一步",
         "skipStep": "跳过此步骤",
         "skipSetup": "跳过引导",
-        "skipSetupHintTitle": "跳过引导须知",
-        "skipSetupHintItems": [
-            "立即进入应用，不执行环境检查与组件安装",
-            "Gateway 未就绪或未配置 API Key 时，对话功能无法使用"
-        ],
         "completeHint": "进入应用后，记得先在设置里配置 AI 模型 API Key。",
         "getStarted": "开始使用"
     },

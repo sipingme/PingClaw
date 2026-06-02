@@ -1,4 +1,5 @@
 import { hostApiFetch } from './host-api';
+import { GATEWAY_PROTOCOL_VERSION } from '../../shared/gateway-protocol';
 
 type GatewayInfo = {
   wsUrl: string;
@@ -145,8 +146,8 @@ class GatewayBrowserClient {
               id: `connect-${Date.now()}`,
               method: 'connect',
               params: {
-                minProtocol: 3,
-                maxProtocol: 3,
+                minProtocol: GATEWAY_PROTOCOL_VERSION,
+                maxProtocol: GATEWAY_PROTOCOL_VERSION,
                 client: {
                   id: 'gateway-client',
                   displayName: 'PingClaw',

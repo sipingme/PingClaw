@@ -1,3 +1,4 @@
+import { GATEWAY_PROTOCOL_VERSION } from '../../shared/gateway-protocol';
 import { trackUiEvent } from './telemetry';
 import {
   AppError,
@@ -703,8 +704,8 @@ export function createGatewayWsTransportInvoker(options: GatewayWsTransportOptio
       id: connectRequestId,
       method: 'connect',
       params: {
-        minProtocol: 3,
-        maxProtocol: 3,
+        minProtocol: GATEWAY_PROTOCOL_VERSION,
+        maxProtocol: GATEWAY_PROTOCOL_VERSION,
         client: {
           id: 'openclaw-control-ui',
           displayName: 'PingClaw UI',

@@ -3,6 +3,8 @@ import {
   getGatewayStartupRecoveryAction,
   hasInvalidConfigFailureSignal,
   isInvalidConfigSignal,
+  isProtocolMismatchError,
+  isTransientGatewayStartError,
   shouldAttemptConfigAutoRepair,
 } from '@electron/gateway/startup-recovery';
 
@@ -97,6 +99,19 @@ describe('getGatewayStartupRecoveryAction', () => {
       maxAttempts: 3,
     });
     expect(action).toBe('fail');
+  });
+
+  it('returns retry for protocol mismatch within attempt budget', () => {
+    const action = getGatewayStartupRecoveryAction({
+      startupError: new Error('protocol mismatch'),
+      startupStderrLines: [],
+      configRepairAttempted: false,
+      attempt: 1,
+      maxAttempts: 3,
+    });
+    expect(action).toBe('retry');
+    expect(isProtocolMismatchError(new Error('protocol mismatch'))).toBe(true);
+    expect(isTransientGatewayStartError(new Error('protocol mismatch'))).toBe(true);
   });
 
   it('returns fail for non-transient, non-config errors', () => {
