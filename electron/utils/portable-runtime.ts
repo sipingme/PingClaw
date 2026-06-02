@@ -7,6 +7,7 @@
  */
 import { existsSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
+import { getHostHomeDir } from './host-home';
 
 const PORTABLE_MARKER = '.pingclaw-portable';
 const PACKAGED_MARKER = join('resources', 'portable.marker');
@@ -124,6 +125,14 @@ export function bootstrapPortableRuntime(options: {
   mkdirSync(pingclawDataDir, { recursive: true });
   mkdirSync(openclawStateDir, { recursive: true });
   mkdirSync(portableHomeDir, { recursive: true });
+
+  if (!process.env.PINGCLAW_HOST_HOME?.trim()) {
+    try {
+      process.env.PINGCLAW_HOST_HOME = getHostHomeDir();
+    } catch {
+      // uv-storage will retry when installing Python.
+    }
+  }
 
   process.env.PINGCLAW_PORTABLE = '1';
   process.env.PINGCLAW_PORTABLE_ROOT = root;

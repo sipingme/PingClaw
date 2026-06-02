@@ -7,8 +7,8 @@
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync } from 'node:fs';
-import { homedir as osHomedir } from 'node:os';
 import { join } from 'node:path';
+import { getHostHomeDir } from './host-home';
 import { isPortableMode } from './portable-runtime';
 import { logger } from './logger';
 
@@ -23,7 +23,7 @@ export function getHostPortableUvRoot(): string | null {
   }
 
   const key = portableStorageKey();
-  const realHome = osHomedir();
+  const realHome = getHostHomeDir();
 
   if (process.platform === 'darwin') {
     return join(realHome, 'Library', 'Application Support', 'PingClaw', 'portable-uv', key);

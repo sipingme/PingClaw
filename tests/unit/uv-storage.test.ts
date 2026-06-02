@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
+import { userInfo } from 'node:os';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -16,6 +16,7 @@ describe('uv-storage (portable)', () => {
     process.env.PINGCLAW_PORTABLE = '1';
     process.env.PINGCLAW_PORTABLE_ROOT = tempRoot;
     process.env.OPENCLAW_STATE_DIR = join(tempRoot, 'data', 'openclaw');
+    process.env.HOME = join(tempRoot, 'data', 'home');
   });
 
   afterEach(() => {
@@ -30,7 +31,7 @@ describe('uv-storage (portable)', () => {
     expect(env.UV_PYTHON_INSTALL_DIR).toBeTruthy();
     expect(env.UV_PYTHON_INSTALL_DIR).toContain('Application Support');
     expect(env.UV_PYTHON_INSTALL_DIR).not.toContain(tempRoot);
-    expect(env.UV_CACHE_DIR).toContain(homedir());
+    expect(env.UV_CACHE_DIR).toContain(userInfo().homedir);
   });
 
   it('returns empty env outside portable mode', async () => {
