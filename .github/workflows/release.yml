@@ -146,7 +146,7 @@ jobs:
         if: matrix.platform == 'mac' && steps.channel.outputs.is_stable == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_IDENTITY_AUTO_DISCOVERY: false
+          CSC_IDENTITY_AUTO_DISCOVERY: true
         run: |
           ulimit -n 65536
           echo "File descriptor limit: $(ulimit -n)"
@@ -174,7 +174,7 @@ jobs:
         if: matrix.platform == 'mac' && steps.channel.outputs.is_stable == 'true' && steps.signing.outputs.can_mac != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_IDENTITY_AUTO_DISCOVERY: false
+          CSC_IDENTITY_AUTO_DISCOVERY: true
         run: |
           ulimit -n 65536
           echo "File descriptor limit: $(ulimit -n)"
