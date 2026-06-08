@@ -20,6 +20,7 @@ set "CLAWX_USER_DATA_DIR=%PINGCLAW_DATA%"
 set "OPENCLAW_STATE_DIR=%OPENCLAW_DATA%"
 set "OPENCLAW_CONFIG_PATH=%OPENCLAW_DATA%\openclaw.json"
 set "PINGCLAW_GATEWAY_PORT=18889"
+set "CLAWX_PORT_CLAWX_HOST_API=13211"
 
 if exist "%ROOT%\PingClaw.exe" (
   start "" "%ROOT%\PingClaw.exe" --user-data-dir="%PINGCLAW_DATA%"
